@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-label="AI Interview Helper — free, open-source AI assistant for job interviews">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0e15"/>
+      <stop offset="1" stop-color="#06070b"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00d4ff"/>
+      <stop offset="1" stop-color="#7c6af7"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0.15" cy="0.2" r="0.6">
+      <stop offset="0" stop-color="#00d4ff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#00d4ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0.9" cy="0.85" r="0.6">
+      <stop offset="0" stop-color="#7c6af7" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#7c6af7" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+  <rect width="1280" height="640" fill="url(#glow1)"/>
+  <rect width="1280" height="640" fill="url(#glow2)"/>
+
+  <!-- Left: headline -->
+  <g font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif">
+    <!-- FREE pill -->
+    <rect x="80" y="112" width="318" height="40" rx="20" fill="#00e5a0" fill-opacity="0.12" stroke="#00e5a0" stroke-opacity="0.6"/>
+    <circle cx="104" cy="132" r="6" fill="#00e5a0"/>
+    <text x="120" y="139" font-size="18" font-weight="700" fill="#00e5a0" letter-spacing="1.5">100% FREE · OPEN SOURCE</text>
+
+    <text x="78" y="238" font-size="76" font-weight="800" fill="#dde3f0">AI Interview</text>
+    <text x="78" y="322" font-size="76" font-weight="800" fill="url(#title)">Helper</text>
+
+    <text x="80" y="384" font-size="26" fill="#9aa3ba">Real-time answers for job interviews —</text>
+    <text x="80" y="420" font-size="26" fill="#9aa3ba">from your voice and your screen.</text>
+
+    <!-- Feature chips -->
+    <g font-size="17" font-weight="600" fill="#dde3f0">
+      <rect x="80" y="466" width="186" height="42" rx="10" fill="#141820" stroke="#ffffff" stroke-opacity="0.12"/>
+      <text x="100" y="493">🎙 Voice → Answer</text>
+      <rect x="278" y="466" width="214" height="42" rx="10" fill="#141820" stroke="#ffffff" stroke-opacity="0.12"/>
+      <text x="298" y="493">🖼 Screenshot → Code</text>
+      <rect x="504" y="466" width="164" height="42" rx="10" fill="#141820" stroke="#ffffff" stroke-opacity="0.12"/>
+      <text x="524" y="493">🔀 7 AI models</text>
+    </g>
+    <text x="80" y="560" font-size="18" fill="#4a5168">No subscription · No sign-up · Bring your own key or run offline</text>
+  </g>
+
+  <!-- Right: app window mock -->
+  <g transform="translate(790 70)">
+    <rect width="410" height="500" rx="16" fill="#090b10" stroke="#ffffff" stroke-opacity="0.12"/>
+    <path d="M0 16a16 16 0 0 1 16-16h378a16 16 0 0 1 16 16v34H0z" fill="#0e1118"/>
+    <line x1="0" y1="50" x2="410" y2="50" stroke="#ffffff" stroke-opacity="0.06"/>
+    <circle cx="28" cy="25" r="9" fill="none" stroke="#00d4ff" stroke-width="2"/>
+    <circle cx="28" cy="25" r="3" fill="#00d4ff"/>
+    <text x="46" y="31" font-family="Consolas, Menlo, monospace" font-size="13" font-weight="700" fill="#dde3f0" letter-spacing="1.2">AI INTERVIEW HELPER</text>
+    <rect x="300" y="13" width="92" height="24" rx="12" fill="none" stroke="#00e5a0"/>
+    <text x="346" y="30" text-anchor="middle" font-family="Consolas, Menlo, monospace" font-size="11" fill="#00e5a0" letter-spacing="1">LISTENING</text>
+
+    <g font-family="Segoe UI, Helvetica Neue, Helvetica, Arial, sans-serif">
+      <!-- Question -->
+      <text x="24" y="90" font-family="Consolas, Menlo, monospace" font-size="11" fill="#4a5168" letter-spacing="1.5">🎧 INTERVIEWER</text>
+      <rect x="24" y="102" width="362" height="64" rx="10" fill="#141820"/>
+      <text x="40" y="130" font-size="16" fill="#dde3f0">How would you find duplicates</text>
+      <text x="40" y="152" font-size="16" fill="#dde3f0">in an array in O(n)?</text>
+
+      <!-- Answer -->
+      <text x="24" y="200" font-family="Consolas, Menlo, monospace" font-size="11" fill="#7c6af7" letter-spacing="1.5">✦ AI ANSWER</text>
+      <rect x="24" y="212" width="362" height="262" rx="10" fill="#0e1118" stroke="#7c6af7" stroke-opacity="0.35"/>
+      <text x="40" y="242" font-size="15" fill="#dde3f0">I'd use a hash set: one pass, and</text>
+      <text x="40" y="264" font-size="15" fill="#dde3f0">each lookup is O(1) on average.</text>
+
+      <rect x="40" y="282" width="330" height="168" rx="8" fill="#06070b"/>
+      <g font-family="Consolas, Menlo, monospace" font-size="14">
+        <text x="56" y="310"><tspan fill="#7c6af7">def</tspan><tspan fill="#00d4ff"> find_dups</tspan><tspan fill="#dde3f0">(nums):</tspan></text>
+        <text x="87" y="334" fill="#dde3f0">seen, dups = <tspan fill="#ffd166">set</tspan>(), <tspan fill="#ffd166">set</tspan>()</text>
+        <text x="87" y="358"><tspan fill="#7c6af7">for</tspan><tspan fill="#dde3f0"> n </tspan><tspan fill="#7c6af7">in</tspan><tspan fill="#dde3f0"> nums:</tspan></text>
+        <text x="118" y="382"><tspan fill="#7c6af7">if</tspan><tspan fill="#dde3f0"> n </tspan><tspan fill="#7c6af7">in</tspan><tspan fill="#dde3f0"> seen: dups.add(n)</tspan></text>
+        <text x="118" y="406" fill="#dde3f0">seen.add(n)</text>
+        <text x="87" y="430"><tspan fill="#7c6af7">return</tspan><tspan fill="#dde3f0"> dups</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>

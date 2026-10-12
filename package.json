@@ -1,7 +1,33 @@
 {
-  "name": "AI BOT",
+  "name": "ai-interview-helper",
   "version": "2.0.0",
-  "description": "AI BOT",
+  "description": "Free, open-source AI interview assistant: real-time answers from voice transcription and screenshots. Works with Groq, Claude, Gemini, OpenAI, DeepSeek, Z.ai and local Ollama.",
+  "keywords": [
+    "ai interview assistant",
+    "interview helper",
+    "interview copilot",
+    "ai interview",
+    "coding interview",
+    "job interview",
+    "electron",
+    "whisper",
+    "speech-to-text",
+    "llm",
+    "groq",
+    "claude",
+    "gemini",
+    "openai",
+    "ollama"
+  ],
+  "homepage": "https://github.com/pyk-boo/ai-interview-helper#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pyk-boo/ai-interview-helper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pyk-boo/ai-interview-helper/issues"
+  },
+  "author": "pyk-boo",
   "license": "MIT",
   "main": "main.js",
   "scripts": {
@@ -15,10 +41,10 @@
   },
   "build": {
     "appId": "com.ai.bot",
-    "productName": "Ai Bot",
-    "executableName": "Ai Bot",
+    "productName": "AI Interview Helper",
+    "executableName": "AI Interview Helper",
     "win": {
-      "executableName": "Ai Bot"
+      "executableName": "AI Interview Helper"
     },
     "mac": {
       "extendInfo": {
