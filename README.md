@@ -48,7 +48,7 @@
 | 🗣 **Speaker separation** | Tells the interviewer (system audio) apart from your mic and only answers the interviewer |
 | 🔀 **7 AI providers** | Groq, Anthropic Claude, Google Gemini, OpenAI GPT, DeepSeek, Z.ai GLM, local Ollama, with automatic fallback when one hits a rate limit |
 | 👤 **Personalized answers** | Paste your resume and target role. Answers come in first person, based on your real experience |
-| 🌐 **Multilingual** | Replies in the language of the question: English, Spanish, Russian |
+| 🌐 **Multilingual** | Replies in the language of the question: English, Spanish, Russian and many more |
 | 🪟 **Always-on-top overlay** | Transparent side panel, compact mode, hide/show with one hotkey |
 | 🔒 **Private by design** | API keys stay on your machine. No telemetry, no analytics, no backend |
 
