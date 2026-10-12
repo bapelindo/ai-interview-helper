@@ -15,6 +15,9 @@
 ![AI providers](https://img.shields.io/badge/AI%20providers-7-00d4ff)
 [![GitHub stars](https://img.shields.io/github/stars/pyk-boo/ai-interview-helper?style=flat&color=ffd166)](https://github.com/pyk-boo/ai-interview-helper/stargazers)
 
+<a href="https://github.com/pyk-boo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Setup.exe"><img src="https://img.shields.io/badge/⬇_Download_for_Windows-free-00d4ff?style=for-the-badge" alt="Download for Windows"/></a>
+<a href="https://pyk-boo.github.io/ai-interview-helper/"><img src="https://img.shields.io/badge/🌐_Website-visit-7c6af7?style=for-the-badge" alt="Website"/></a>
+
 [**Quick start**](#-quick-start) · [**Features**](#-features) · [**Why free?**](#-free-vs-paid-interview-copilots) · [**FAQ**](#-faq) · [**☕ Support**](#-support-the-project)
 
 </div>
@@ -50,6 +53,17 @@
 | 🔒 **Private by design** | API keys stay on your machine. No telemetry, no analytics, no backend |
 
 ## 🚀 Quick start
+
+### Option 1: download (Windows)
+
+| | |
+|---|---|
+| 📦 **[Installer](https://github.com/pyk-boo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Setup.exe)** | Standard setup with a Start menu shortcut |
+| 🎒 **[Portable](https://github.com/pyk-boo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Portable.exe)** | Single .exe, no installation needed |
+
+> Windows may show *"Windows protected your PC"* because the app isn't code-signed yet (certificates cost money, and this project is free). Click **More info → Run anyway**. The full source is right here, so you can check it or build it yourself.
+
+### Option 2: run from source (Windows / macOS)
 
 > Requires [Node.js](https://nodejs.org/) 18+.
 
@@ -154,7 +168,10 @@ Output goes to `dist/`.
 ├── index.html    # UI and logic: chat, audio, AI provider calls
 ├── start.bat     # one-click launch (Windows)
 ├── start.vbs     # launch without a console window
-└── stop.vbs      # stop the app
+├── stop.vbs      # stop the app
+├── build/        # app icon for electron-builder
+├── assets/       # README banner and social preview
+└── docs/         # project website (GitHub Pages)
 ```
 
 ## 🤝 Contributing

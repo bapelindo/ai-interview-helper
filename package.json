@@ -43,10 +43,49 @@
     "appId": "com.ai.bot",
     "productName": "AI Interview Helper",
     "executableName": "AI Interview Helper",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "package.json"
+    ],
+    "publish": null,
     "win": {
-      "executableName": "AI Interview Helper"
+      "executableName": "AI Interview Helper",
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "AI-Interview-Helper-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "AI-Interview-Helper-Portable.${ext}"
     },
     "mac": {
+      "icon": "build/icon.png",
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity",
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Microphone access is required for voice transcription.",
         "NSCameraUsageDescription": "Not used."
