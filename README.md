@@ -12,6 +12,7 @@ in a compact panel that stays on top of every window.
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey)
 ![Providers](https://img.shields.io/badge/AI%20providers-7-00d4ff)
 ![Version](https://img.shields.io/badge/version-2.0.0-7c6af7)
+![License](https://img.shields.io/badge/license-MIT-00e5a0)
 
 </div>
 
@@ -105,6 +106,10 @@ Output goes to the `dist/` folder.
 ## ⚠️ Disclaimer
 
 This project is intended for learning and interview preparation (mock interviews, practicing answers). Using it during real interviews may violate the rules of the company or platform. That responsibility lies with the user.
+
+## 📄 License
+
+Distributed under the [MIT License](LICENSE).
 
 <div align="center">
 <sub>Made with ☕ by <a href="https://github.com/pyk-boo">pyk-boo</a></sub>
