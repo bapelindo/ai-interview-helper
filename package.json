@@ -1,0 +1,29 @@
+{
+  "name": "AI BOT",
+  "version": "2.0.0",
+  "description": "AI BOT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.ai.bot",
+    "productName": "Ai Bot",
+    "executableName": "Ai Bot",
+    "win": {
+      "executableName": "Ai Bot"
+    },
+    "mac": {
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Microphone access is required for voice transcription.",
+        "NSCameraUsageDescription": "Not used."
+      }
+    }
+  }
+}

@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>AI BOT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* Always show the plain arrow cursor — no I-beam over text, no hand over buttons */
+*,*::before,*::after{cursor:default !important}
+body{-webkit-user-select:none;user-select:none}
+input,textarea,.msg-text,.ai-text{-webkit-user-select:text;user-select:text}
+
+:root{
+  --bg:#090b10;--surface:#0e1118;--surface2:#141820;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --accent:#00d4ff;--accent2:#7c6af7;--green:#00e5a0;--red:#ff5f6d;--yellow:#ffd166;--orange:#ff9f43;
+  --text:#dde3f0;--muted:#4a5168;--muted2:#7a8299;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;--r:8px;
+}
+html,body{width:100%;height:100%;background:transparent;font-family:var(--sans);color:var(--text);overflow:hidden}
+#app{width:100%;height:100vh;display:flex;flex-direction:column;background:var(--bg);border-left:1px solid var(--border2);overflow:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface);-webkit-app-region:drag;flex-shrink:0;gap:8px}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.1em;color:var(--text);-webkit-app-region:no-drag}
+.logo-ring{width:20px;height:20px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center}
+.logo-ring::after{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 6px var(--accent);animation:breathe 2.5s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:1}50%{opacity:0.3}}
+.header-right{display:flex;align-items:center;gap:6px;-webkit-app-region:no-drag}
+.badge{font-family:var(--mono);font-size:9px;font-weight:500;padding:2px 7px;border-radius:20px;border:1px solid var(--border2);color:var(--muted2);letter-spacing:0.08em;transition:all 0.3s}
+.badge.listening{color:var(--green);border-color:var(--green);box-shadow:0 0 8px rgba(0,229,160,0.2)}
+.badge.capturing{color:var(--accent);border-color:var(--accent);box-shadow:0 0 8px rgba(0,212,255,0.2)}
+.badge.thinking{color:var(--accent2);border-color:var(--accent2)}
+.badge.transcribing{color:var(--yellow,#ffd166);border-color:var(--yellow,#ffd166)}
+.badge.done{color:var(--green);border-color:var(--green)}
+.badge.error{color:var(--red);border-color:var(--red)}
+.btn-icon{width:26px;height:26px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--muted2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;-webkit-app-region:no-drag}
+.btn-icon:hover{color:var(--text);border-color:var(--border2)}
+.btn-icon.active{color:var(--accent);border-color:var(--accent);background:rgba(0,212,255,0.08)}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.tab{flex:1;padding:8px 0;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);background:transparent;border:none;cursor:pointer;transition:all 0.2s;border-bottom:2px solid transparent}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab:hover:not(.active){color:var(--muted2)}
+
+/* CHAT PANE */
+#chatPane{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+#chatPane.hidden{display:none!important}
+#settingsPanel{overflow-y:auto;flex-shrink:1;padding:12px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);max-height:58vh;min-height:0}
+#settingsPanel.collapsed{display:none!important}
+#chatMessages{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.chat-input-bar{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-shrink:0;background:var(--surface)}
+.chat-input-bar textarea{flex:1;min-height:32px;max-height:80px;resize:none;font-size:11px;padding:7px 10px;-webkit-app-region:no-drag}
+.btn-send{background:var(--accent);border:none;border-radius:var(--r);color:var(--bg);font-size:14px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .2s;font-weight:700}
+.btn-send:hover{opacity:.8}.btn-send:disabled{opacity:.4;cursor:not-allowed}
+.btn-clear-chat{background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--muted);font-size:12px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.btn-clear-chat:hover{color:var(--red);border-color:var(--red)}
+
+/* MANUAL RECORD */
+.btn-record{width:100%;padding:14px;background:var(--surface2);border:2px solid var(--red);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:0.05em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;-webkit-app-region:no-drag}
+.btn-record:hover{background:rgba(255,95,109,0.1);transform:translateY(-1px)}
+.btn-record:active{transform:translateY(0)}
+.btn-record.recording{background:rgba(255,95,109,0.18);border-color:var(--red);animation:pulseRec 1.4s ease-in-out infinite}
+.btn-record.recording .record-icon{animation:micShake 0.5s ease-in-out infinite}
+@keyframes pulseRec{0%,100%{box-shadow:0 0 0 0 rgba(255,95,109,0.5)}50%{box-shadow:0 0 0 10px rgba(255,95,109,0)}}
+@keyframes micShake{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.record-icon{font-size:16px;display:inline-block}
+.btn-test{background:transparent;border:1px solid var(--border);border-radius:var(--r);color:var(--muted2);font-family:var(--mono);font-size:10px;padding:5px 10px;cursor:pointer;transition:all 0.2s;-webkit-app-region:no-drag}
+.btn-test:hover{color:var(--accent);border-color:var(--accent)}
+.btn-test:active{transform:scale(0.97)}
+.record-timer{font-family:var(--mono);font-size:10px;color:var(--muted2);text-align:center;margin-top:4px;font-variant-numeric:tabular-nums}
+
+/* AUDIO PANE */
+#audioPane{flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:14px;gap:10px;min-height:0}
+#audioPane.hidden{display:none!important}
+
+/* SHARED FORM */
+.section-label{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:6px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:11px;color:var(--muted2)}
+input,textarea,select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:7px 10px;outline:none;resize:none;transition:border-color 0.2s;-webkit-app-region:no-drag}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+input[type=password]{letter-spacing:0.1em}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:0.5}
+textarea{min-height:68px}
+select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5168'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px}
+select option{background:var(--surface2)}
+.divider{height:1px;background:var(--border);margin:2px 0}
+.api-grid{display:flex;flex-direction:column;gap:5px}
+.api-row{display:grid;grid-template-columns:82px 1fr 130px;gap:5px;align-items:center}
+.api-row-2col{grid-template-columns:82px 1fr!important}
+.api-label{font-family:var(--mono);font-size:10px;color:var(--muted2);white-space:nowrap;display:flex;align-items:center;gap:5px}
+.provider-dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.dot-anthropic{background:#c87941}.dot-gemini{background:#4285f4}.dot-openai{background:#10a37f}
+.dot-deepseek{background:#7c6af7}.dot-groq{background:#f55036}.dot-ollama{background:#ff9f43}.dot-zai{background:#0d9488}
+.key-wrap{position:relative}
+.key-status{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--muted);transition:background 0.3s;pointer-events:none}
+.key-status.active{background:var(--green);box-shadow:0 0 5px rgba(0,229,160,0.5)}.key-status.inactive{background:var(--muted)}
+/* Model priority chips — click order = priority */
+.priority-list{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.prio-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-family:var(--mono);font-size:10px;color:var(--muted2);cursor:pointer;user-select:none;transition:all .15s;-webkit-app-region:no-drag}
+.prio-chip:hover{border-color:var(--border2);color:var(--text)}
+.prio-chip.sel{border-color:var(--accent);color:var(--text);background:rgba(0,212,255,0.08)}
+.prio-chip.off{opacity:.45}
+.prio-rank{min-width:13px;height:13px;border-radius:50%;background:var(--accent);color:var(--bg);font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.prio-reset{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:10px;padding:3px 7px;cursor:pointer;transition:all .15s;-webkit-app-region:no-drag}
+.prio-reset:hover{color:var(--red);border-color:var(--red)}
+.prio-hint{width:100%;font-size:9px;color:var(--muted);font-family:var(--mono)}
+/* Compact session mode (small semi-transparent square) */
+body.compact #app{border:1px solid var(--border2);border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.55)}
+body.compact #settingsPanel{max-height:44vh}
+body.compact .header{padding:7px 10px}
+.btn-primary{width:100%;padding:10px;background:var(--accent);color:var(--bg);border:none;border-radius:var(--r);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:0.06em;cursor:pointer;transition:opacity 0.2s,transform 0.15s}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px)}.btn-primary:active{transform:translateY(0)}
+.hotkeys-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.hk{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:10px;color:var(--muted2)}
+kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:9px;color:var(--accent)}
+
+/* MESSAGES */
+.msg{display:flex;flex-direction:column;gap:4px;animation:fadeUp 0.25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-meta{display:flex;align-items:center;justify-content:space-between}
+.msg-role{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.role-dot{width:5px;height:5px;border-radius:50%}
+.msg-body{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-size:12px;line-height:1.7;color:var(--text);word-break:break-word}
+.msg-body.ai{border-color:rgba(0,212,255,0.15);background:rgba(0,212,255,0.03)}
+.msg-body.transcribed{border-color:rgba(0,229,160,0.15);background:rgba(0,229,160,0.03);font-style:italic;color:var(--muted2)}
+.msg-body pre{background:rgba(255,255,255,0.04);border:1px solid var(--border2);border-radius:6px;padding:10px;margin:8px 0;overflow-x:auto;font-family:var(--mono);font-size:11px;line-height:1.5}
+.msg-body code{font-family:var(--mono);font-size:11px;background:rgba(255,255,255,0.06);border-radius:3px;padding:1px 4px;color:var(--accent)}
+.msg-body pre code{background:none;padding:0;color:var(--text)}
+.btn-copy{background:transparent;border:1px solid var(--border);border-radius:5px;color:var(--muted);font-family:var(--mono);font-size:9px;padding:2px 7px;cursor:pointer;transition:all 0.2s}
+.btn-copy:hover{color:var(--text);border-color:var(--border2)}
+.provider-tag{font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:4px;border:1px solid var(--border);color:var(--muted);margin-left:4px}
+.thinking-wrap{display:flex;align-items:center;gap:8px;padding:8px 0;color:var(--muted2);font-size:11px}
+.dots{display:flex;gap:4px}
+.dots span{width:5px;height:5px;background:var(--accent);border-radius:50%;animation:dot-bounce 1.2s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes dot-bounce{0%,100%{transform:translateY(0);opacity:.3}50%{transform:translateY(-5px);opacity:1}}
+.listen-bar{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.2);border-radius:var(--r);padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--green)}
+.listen-wave{display:flex;gap:2px;align-items:center}
+.rec-bar{background:rgba(255,95,109,0.08);border-color:rgba(255,95,109,0.25);color:var(--red)}
+.rec-bar .listen-wave span{background:var(--red)}
+.listen-wave span{width:3px;background:var(--green);border-radius:2px;animation:wave 1s ease-in-out infinite}
+.listen-wave span:nth-child(1){height:6px}.listen-wave span:nth-child(2){height:12px;animation-delay:.1s}.listen-wave span:nth-child(3){height:8px;animation-delay:.2s}.listen-wave span:nth-child(4){height:14px;animation-delay:.1s}.listen-wave span:nth-child(5){height:6px;animation-delay:.3s}
+@keyframes wave{0%,100%{transform:scaleY(0.5)}50%{transform:scaleY(1.2)}}
+.screenshot-thumb{width:100%;border-radius:6px;border:1px solid var(--border);opacity:.65;cursor:pointer;transition:opacity .2s}
+.screenshot-thumb:hover{opacity:1}
+.sys-msg{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:center;padding:3px 0}
+.err-msg{background:rgba(255,95,109,0.08);border:1px solid rgba(255,95,109,0.2);border-radius:var(--r);padding:8px 12px;font-size:11px;color:var(--red)}
+
+/* AUDIO PANE */
+.audio-row{display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r)}
+.audio-row select{flex:1;font-size:11px;padding:4px 8px}
+#listenStatus{font-size:11px;color:var(--muted2);font-family:var(--mono);padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);text-align:center}
+/* Volume meter */
+.vol-meter{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;border:1px solid var(--border)}
+.vol-bar{height:100%;width:0%;background:var(--green);transition:width 0.1s;border-radius:2px}
+#transcriptLog{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted2);font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;min-height:60px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo"><div class="logo-ring"></div>AI BOT <span style="color:var(--muted);font-size:10px;margin-left:2px">v3</span></div>
+  <div class="header-right">
+    <span id="providerIndicator" style="font-family:var(--mono);font-size:9px;color:var(--muted);display:none"></span>
+    <span class="badge" id="badge">READY</span>
+    <button class="btn-icon active" id="btnToggleSettings" title="Toggle Settings">⚙</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" data-tab="chat">Chat</button>
+  <button class="tab" data-tab="audio">Audio</button>
+</div>
+
+<!-- ══ CHAT PANE ══ -->
+<div id="chatPane">
+  <div id="settingsPanel">
+    <div class="section-label">AI Providers</div>
+    <div class="api-grid">
+      <!-- Groq — PRIMARY recommended -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-groq"></span>Groq ⭐</span>
+        <div class="key-wrap"><input type="password" id="keyGroq" placeholder="gsk_..." oninput="updateKeyStatus('groq',this.value)"/><span class="key-status inactive" id="ks-groq"></span></div>
+        <select id="modelGroq">
+          <option value="openai/gpt-oss-20b">GPT-OSS 20B ⚡</option>
+          <option value="openai/gpt-oss-120b">GPT-OSS 120B 🧠</option>
+          <option value="qwen/qwen3.6-27b">Qwen3.6 27B</option>
+        </select>
+      </div>
+      <!-- Anthropic -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-anthropic"></span>Anthropic</span>
+        <div class="key-wrap"><input type="password" id="keyAnthropic" placeholder="sk-ant-..." oninput="updateKeyStatus('anthropic',this.value)"/><span class="key-status inactive" id="ks-anthropic"></span></div>
+        <select id="modelAnthropic">
+          <option value="claude-sonnet-5-5">Sonnet 5.5</option>
+          <option value="claude-haiku-4-5-20251001">Haiku 4.5 ⚡</option>
+          <option value="claude-opus-5-5">Opus 5.5 🧠</option>
+        </select>
+      </div>
+      <!-- Gemini — FREE tier -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-gemini"></span>Gemini <span style="color:var(--green);font-size:8px">FREE</span></span>
+        <div class="key-wrap"><input type="password" id="keyGemini" placeholder="AIza..." oninput="updateKeyStatus('gemini',this.value)"/><span class="key-status inactive" id="ks-gemini"></span></div>
+        <select id="modelGemini">
+          <option value="gemini-flash-latest">Flash (latest) ⚡</option>
+          <option value="gemini-2.5-flash">2.5 Flash</option>
+          <option value="gemini-flash-lite-latest">Flash-Lite (fastest) FREE</option>
+        </select>
+      </div>
+      <!-- OpenAI -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-openai"></span>OpenAI</span>
+        <div class="key-wrap"><input type="password" id="keyOpenAI" placeholder="sk-..." oninput="updateKeyStatus('openai',this.value)"/><span class="key-status inactive" id="ks-openai"></span></div>
+        <select id="modelOpenAI">
+          <option value="gpt-4o-mini">4o-mini ⚡</option>
+          <option value="gpt-4o">GPT-4o 🧠</option>
+        </select>
+      </div>
+      <!-- DeepSeek -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-deepseek"></span>DeepSeek</span>
+        <div class="key-wrap"><input type="password" id="keyDeepseek" placeholder="sk-..." oninput="updateKeyStatus('deepseek',this.value)"/><span class="key-status inactive" id="ks-deepseek"></span></div>
+        <select id="modelDeepseek">
+          <option value="deepseek-chat">Chat ⚡</option>
+          <option value="deepseek-reasoner">Reasoner 🧠</option>
+        </select>
+      </div>
+      <!-- Z.ai / GLM — FREE tier -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-zai"></span>Z.ai <span style="color:var(--green);font-size:8px">FREE</span></span>
+        <div class="key-wrap"><input type="password" id="keyZai" placeholder="..." oninput="updateKeyStatus('zai',this.value)"/><span class="key-status inactive" id="ks-zai"></span></div>
+        <select id="modelZai">
+          <option value="glm-4.5-flash">GLM-4.5-Flash ⚡ FREE</option>
+          <option value="glm-4.5-air">GLM-4.5-Air</option>
+          <option value="glm-4.5">GLM-4.5 🧠</option>
+          <option value="glm-4.6">GLM-4.6 🧠</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:4px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="ollamaEnabled" style="width:auto" onchange="config.ollamaEnabled=this.checked;saveConfig();renderPriorityList();updateProviderIndicator()"/>
+        Ollama <span class="provider-dot dot-ollama"></span> (local — no internet, no limits, free)
+      </label>
+      <input type="text" id="ollamaModel" placeholder="llama3.1:8b" style="margin-top:4px"/>
+      <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" style="margin-top:4px"/>
+      <button class="btn-test" id="btnTestOllama" style="width:100%;margin-top:4px">🔌 Test Ollama connection</button>
+      <div id="ollamaTestResult" style="font-family:var(--mono);font-size:10px;margin-top:4px;color:var(--muted2);min-height:12px;word-break:break-word"></div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:4px">
+        Install <span style="color:var(--accent)">ollama.com</span>, then <code style="font-size:9px">ollama pull llama3.1:8b</code>. Can be primary or fallback.
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Model priority — click providers in order: 1st tried first, then 2nd, 3rd… Click again to remove.</label>
+      <div class="priority-list" id="providerPriority"></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-label">Your Profile</div>
+    <div class="field">
+      <label>Position / Role applying for</label>
+      <input type="text" id="position" placeholder="e.g. Python Developer, Frontend Engineer"/>
+    </div>
+    <div class="field">
+      <label>Resume / Key experience &amp; skills</label>
+      <textarea id="resume" placeholder="Paste your experience, skills, projects..."></textarea>
+    </div>
+    <div class="field">
+      <label>AI Instructions (micro-prompt)</label>
+      <textarea id="customPrompt" style="min-height:72px" placeholder="e.g. Answer naturally, like a confident human. Keep answers concise unless it's a coding question."></textarea>
+    </div>
+    <button class="btn-primary" id="btnSaveSettings">✓ Save &amp; Start Session</button>
+    
+    <div class="hotkeys-grid">
+      <div class="hk"><span>Screenshot</span><kbd>⌃⇧Space</kbd></div>
+      <div class="hk"><span>Listen</span><kbd>⌃⇧L</kbd></div>
+      <div class="hk"><span>Hide/Show</span><kbd>⌃⇧H</kbd></div>
+      <div class="hk"><span>Clear chat</span><kbd>⌃⇧C</kbd></div>
+      <div class="hk" style="grid-column:1/-1;border-color:rgba(255,95,109,0.35);background:rgba(255,95,109,0.06)"><span style="color:var(--red)">Full shutdown</span><kbd style="color:var(--red);border-color:rgba(255,95,109,0.5)">⌃⇧Q</kbd></div>
+    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center">🛡 INVISIBLE to screen sharing</div>
+  </div>
+
+  <div id="chatMessages"></div>
+
+  <div class="chat-input-bar">
+    <button class="btn-clear-chat" id="btnClearChat" title="Clear">↩</button>
+    <textarea id="userInput" placeholder="Ask a follow-up question..." rows="1"></textarea>
+    <button class="btn-send" id="btnSend">↑</button>
+  </div>
+</div>
+
+<!-- ══ AUDIO PANE ══ -->
+<div id="audioPane" class="hidden">
+
+  <div class="section-label">Groq API Key (Whisper + LLM)</div>
+  <div class="api-row api-row-2col">
+    <span class="api-label"><span class="provider-dot dot-groq"></span>Groq Key</span>
+    <div class="key-wrap">
+      <input type="password" id="keyGroqAudio" placeholder="gsk_..." oninput="updateKeyStatus('groq',this.value);syncGroqKey(this.value)"/>
+      <span class="key-status inactive" id="ks-groq-audio"></span>
+    </div>
+  </div>
+  <div style="font-size:10px;color:var(--muted2)">Free at <span style="color:#f55036">console.groq.com</span> — used for both Whisper transcription AND LLM. If no Groq key is set, voice transcription will automatically try OpenAI Whisper or Gemini (keys from the Chat tab).</div>
+
+  <div class="divider"></div>
+
+  <div class="section-label">Audio Input Device</div>
+  <div class="audio-row">
+    <span style="color:var(--muted2);font-size:11px;white-space:nowrap">Device:</span>
+    <select id="audioDeviceLive" onchange="config.audioDeviceId=this.value;saveConfig()"></select>
+    <button class="btn-icon" id="btnRefreshDevices" title="Refresh">↺</button>
+  </div>
+
+  <!-- Speaker separation: interviewer (system/loopback) vs me (mic) -->
+  <div class="field" style="margin-top:8px">
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" id="diarizeEnabled" style="width:auto"/>
+      Distinguish interviewer's voice from mine (2 sources)
+    </label>
+  </div>
+  <div id="diarizeDevices" style="display:none;flex-direction:column;gap:6px">
+    <div class="audio-row">
+      <span style="color:var(--muted2);font-size:11px;white-space:nowrap">🎧 Interviewer:</span>
+      <select id="interviewerDevice" onchange="config.interviewerDeviceId=this.value;saveConfig()"></select>
+    </div>
+    <div class="audio-row">
+      <span style="color:var(--muted2);font-size:11px;white-space:nowrap">🗣 My mic:</span>
+      <select id="myMicDevice" onchange="config.myMicDeviceId=this.value;saveConfig()"></select>
+    </div>
+    <div style="font-size:10px;color:var(--muted2)">
+      «Interviewer» = system/loopback meeting audio (e.g. <span style="color:var(--accent)">VB-Cable</span> / Stereo Mix). «My mic» = your microphone. AI only responds to the interviewer's voice; your voice won't be sent as a question.
+    </div>
+    <div id="meSpeakingInd" style="font-size:10px;color:var(--muted);font-family:var(--mono);min-height:12px"></div>
+  </div>
+
+  <!-- Manual record (always works, no silence detection needed) -->
+  <button class="btn-record" id="btnManualRecord">
+    <span class="record-icon">🎤</span>
+    <span id="recordLabel">Tap to Record</span>
+  </button>
+  <div class="record-timer" id="recordTimer"></div>
+
+  <!-- Volume meter -->
+  <div class="vol-meter"><div class="vol-bar" id="volBar"></div></div>
+
+  <div id="listenStatus">🎯 Tap above or Ctrl+Shift+L — start / stop</div>
+
+  <div class="section-label">Settings</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+    <div class="field">
+      <label>Silence threshold (sec)</label>
+      <select id="silenceThresh">
+        <option value="1200">1.2s (faster)</option>
+        <option value="1800" selected>1.8s (balanced)</option>
+        <option value="2500">2.5s (slower)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Language</label>
+      <select id="whisperLang">
+        <option value="" selected>Auto-detect 🌐</option>
+        <option value="en">English 🇺🇸</option>
+        <option value="ru">Russian 🇷🇺</option>
+        <option value="uk">Ukrainian 🇺🇦</option>
+        <option value="de">German 🇩🇪</option>
+        <option value="fr">French 🇫🇷</option>
+        <option value="es">Spanish 🇪🇸</option>
+        <option value="it">Italian 🇮🇹</option>
+        <option value="pt">Portuguese 🇵🇹</option>
+        <option value="pl">Polish 🇵🇱</option>
+        <option value="nl">Dutch 🇳🇱</option>
+        <option value="cs">Czech 🇨🇿</option>
+        <option value="tr">Turkish 🇹🇷</option>
+        <option value="zh">Chinese 🇨🇳</option>
+        <option value="ja">Japanese 🇯🇵</option>
+        <option value="ko">Korean 🇰🇷</option>
+        <option value="ar">Arabic 🇸🇦</option>
+        <option value="hi">Hindi 🇮🇳</option>
+        <option value="he">Hebrew 🇮🇱</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="section-label">Transcription Log</div>
+  <div id="transcriptLog"><span style="color:var(--muted)">Transcriptions will appear here...</span></div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG & STATE
+// ══════════════════════════════════════════════
+let config = {
+  keyGroq:'', keyAnthropic:'', keyGemini:'', keyOpenAI:'', keyDeepseek:'', keyZai:'',
+  modelGroq:'openai/gpt-oss-20b',
+  modelAnthropic:'claude-sonnet-5-5',
+  modelGemini:'gemini-flash-latest',
+  modelOpenAI:'gpt-4o-mini',
+  modelDeepseek:'deepseek-chat',
+  modelZai:'glm-4.5-flash',
+  primaryProvider:'gemini',
+  providerOrder:[],
+  position:'', resume:'', customPrompt:'',
+  audioDeviceId:'',
+  diarize: false,
+  interviewerDeviceId:'',
+  myMicDeviceId:'',
+  settingsOpen: true,
+  silenceThresh: 1800,
+  whisperLang: '',
+  ollamaEnabled: false,
+  ollamaModel: 'llama3.1:8b',
+  ollamaUrl: 'http://localhost:11434'
+};
+
+const ALL_PROVIDERS = ['groq','anthropic','gemini','openai','deepseek','zai'];
+const ORDERABLE_PROVIDERS = ['groq','anthropic','gemini','openai','deepseek','zai','ollama'];
+const PROVIDER_NAMES = {groq:'Groq',anthropic:'Anthropic',gemini:'Gemini',openai:'OpenAI',deepseek:'DeepSeek',zai:'Z.ai',ollama:'Ollama'};
+const PROVIDER_DOTS  = {groq:'dot-groq',anthropic:'dot-anthropic',gemini:'dot-gemini',openai:'dot-openai',deepseek:'dot-deepseek',zai:'dot-zai',ollama:'dot-ollama'};
+// Config/DOM suffix per provider. NOTE: openai -> 'OpenAI' (not 'Openai'); a naive
+// capitalize produced 'keyOpenai'/'modelOpenai' and silently broke the OpenAI provider.
+const CFG_SUFFIX = {groq:'Groq',anthropic:'Anthropic',gemini:'Gemini',openai:'OpenAI',deepseek:'Deepseek',zai:'Zai'};
+function cfgKey(p)   { return 'key'   + (CFG_SUFFIX[p] || (p[0].toUpperCase() + p.slice(1))); }
+function cfgModel(p) { return 'model' + (CFG_SUFFIX[p] || (p[0].toUpperCase() + p.slice(1))); }
+
+// Normalize config.providerOrder: keep only known providers, dedupe.
+// The list holds just the providers the user clicked, in click order (may be empty).
+function normalizeProviderOrder() {
+  let order = Array.isArray(config.providerOrder) ? config.providerOrder.filter(p => ORDERABLE_PROVIDERS.includes(p)) : [];
+  order = [...new Set(order)];
+  config.providerOrder = order;
+  config.primaryProvider = order[0] || '';
+}
+
+let messages = [], isThinking = false, isListening = false, activeTab = 'chat';
+
+// Audio recording state
+let mediaRecorder    = null;
+let audioChunks      = [];
+let currentStream    = null;
+let analyserCtx      = null;
+let analyserNode     = null;
+let silenceInterval  = null;   // setInterval id for silence detection (robust while window hidden)
+let autoMaxTimer     = null;   // hard cap so an auto chunk always flushes
+let isRecordingChunk = false;
+let listenStarting   = false;  // guard against double Ctrl+Shift+L before isListening is set
+
+// Diarization: a separate monitor on MY mic (voice-activity only) so the app knows
+// when the user is speaking vs the interviewer. The interviewer channel is the one
+// that gets transcribed and answered.
+let myMicStream   = null;
+let myMicCtx      = null;
+let myMicNode     = null;
+let myMicInterval = null;
+let userSpeaking  = false;
+
+// ── DOM refs ──
+const chatPaneEl      = document.getElementById('chatPane');
+const audioPaneEl     = document.getElementById('audioPane');
+const settingsPanelEl = document.getElementById('settingsPanel');
+const chatMessagesEl  = document.getElementById('chatMessages');
+const badgeEl         = document.getElementById('badge');
+const btnSave         = document.getElementById('btnSaveSettings');
+const btnToggleSet    = document.getElementById('btnToggleSettings');
+const btnSend         = document.getElementById('btnSend');
+const btnClear        = document.getElementById('btnClearChat');
+const userInput       = document.getElementById('userInput');
+const volBar          = document.getElementById('volBar');
+
+// ══════════════════════════════════════════════
+//  INIT — load saved config
+// ══════════════════════════════════════════════
+try {
+  const saved = JSON.parse(localStorage.getItem('ghost-v3') || '{}');
+  Object.assign(config, saved);
+  // Migrate legacy configs that only had a single primaryProvider (no ordered list yet).
+  if (!Array.isArray(saved.providerOrder) && saved.primaryProvider) {
+    config.providerOrder = [saved.primaryProvider, ...ORDERABLE_PROVIDERS.filter(p => p !== saved.primaryProvider)];
+  }
+  // Drop outdated Anthropic model ids that no longer exist (would 400).
+  if (['claude-sonnet-4-6', 'claude-opus-4-6'].includes(config.modelAnthropic)) {
+    config.modelAnthropic = 'claude-sonnet-5-5';
+  }
+  normalizeProviderOrder();
+
+  const fields = ['keyGroq','keyAnthropic','keyGemini','keyOpenAI','keyDeepseek','keyZai',
+    'modelGroq','modelAnthropic','modelGemini','modelOpenAI','modelDeepseek','modelZai',
+    'position','resume','customPrompt','silenceThresh','whisperLang','ollamaModel','ollamaUrl'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && config[id] !== undefined) el.value = config[id];
+  });
+  const ollamaChk = document.getElementById('ollamaEnabled');
+  if (ollamaChk) ollamaChk.checked = !!config.ollamaEnabled;
+
+  const diarChk = document.getElementById('diarizeEnabled');
+  if (diarChk) diarChk.checked = !!config.diarize;
+  applyDiarizeUI();
+
+  // Sync groq key to audio tab display
+  if (config.keyGroq) {
+    const el = document.getElementById('keyGroqAudio');
+    if (el) el.value = config.keyGroq;
+    updateKeyStatus('groq', config.keyGroq);
+    document.getElementById('ks-groq-audio').className = 'key-status ' + (config.keyGroq.length > 6 ? 'active' : 'inactive');
+  }
+
+  // Key dots
+  ALL_PROVIDERS.forEach(p => {
+    const k = config[cfgKey(p)];
+    if (k) updateKeyStatus(p, k);
+  });
+
+  renderPriorityList();
+
+  // Settings: always open on startup so user always sees their keys
+  // User can collapse manually with ⚙ button
+} catch(e) {}
+
+// Ensure the priority list renders even if the init try/catch above bailed early.
+if (!document.getElementById('providerPriority')?.children.length) {
+  normalizeProviderOrder();
+  renderPriorityList();
+}
+
+loadAudioDevices();
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function updateKeyStatus(p, v) {
+  const el = document.getElementById('ks-' + p);
+  if (el) el.className = 'key-status ' + (v && v.trim().length > 6 ? 'active' : 'inactive');
+}
+
+// Groq key is shared between chat settings and audio tab
+function syncGroqKey(val) {
+  config.keyGroq = val.trim();
+  const mainEl = document.getElementById('keyGroq');
+  if (mainEl) mainEl.value = val;
+  const audioEl = document.getElementById('ks-groq-audio');
+  if (audioEl) audioEl.className = 'key-status ' + (val.trim().length > 6 ? 'active' : 'inactive');
+  saveConfig();
+}
+
+function saveConfig() {
+  try { localStorage.setItem('ghost-v3', JSON.stringify(config)); } catch(e) {}
+}
+
+function readFormToConfig() {
+  // Only overwrite keys if the field actually has a value — never erase saved keys
+  ALL_PROVIDERS.forEach(p => {
+    const el = document.getElementById(cfgKey(p));
+    if (el && el.value.trim()) config[cfgKey(p)] = el.value.trim();
+  });
+  ['modelGroq','modelAnthropic','modelGemini','modelOpenAI','modelDeepseek','modelZai',
+   'position','resume','customPrompt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value !== undefined) config[id] = el.value.trim ? el.value.trim() : el.value;
+  });
+  config.silenceThresh = parseInt(document.getElementById('silenceThresh')?.value || 1800);
+  const wlEl = document.getElementById('whisperLang');
+  if (wlEl) config.whisperLang = wlEl.value;   // '' = auto-detect (don't coerce to a language)
+  const devEl = document.getElementById('audioDeviceLive');
+  if (devEl && devEl.value) config.audioDeviceId = devEl.value;
+  // Diarization: separate interviewer / my-mic sources
+  config.diarize = !!document.getElementById('diarizeEnabled')?.checked;
+  const ivEl = document.getElementById('interviewerDevice');
+  if (ivEl && ivEl.value) config.interviewerDeviceId = ivEl.value;
+  const mmEl = document.getElementById('myMicDevice');
+  if (mmEl && mmEl.value) config.myMicDeviceId = mmEl.value;
+  // Sync groq key from audio tab field
+  const agEl = document.getElementById('keyGroqAudio');
+  if (agEl && agEl.value.trim()) config.keyGroq = agEl.value.trim();
+  // Ollama (no key — just enabled flag + model name)
+  config.ollamaEnabled = !!document.getElementById('ollamaEnabled')?.checked;
+  const om = document.getElementById('ollamaModel');
+  if (om) config.ollamaModel = om.value.trim() || 'llama3.1:8b';
+  const ou = document.getElementById('ollamaUrl');
+  if (ou) config.ollamaUrl = ou.value.trim() || 'http://localhost:11434';
+}
+
+// Render model chips. Click order = priority: first clicked is #1, then #2, #3…
+function renderPriorityList() {
+  const host = document.getElementById('providerPriority');
+  if (!host) return;
+  if (!Array.isArray(config.providerOrder)) normalizeProviderOrder();
+  host.innerHTML = '';
+  ORDERABLE_PROVIDERS.forEach(p => {
+    const rank = config.providerOrder.indexOf(p);
+    const enabled = p === 'ollama' ? !!config.ollamaEnabled : !!getKey(p);
+    const chip = document.createElement('span');
+    chip.className = 'prio-chip' + (rank >= 0 ? ' sel' : '') + (enabled ? '' : ' off');
+    chip.title = enabled ? '' : (p === 'ollama' ? 'Ollama disabled' : 'No API key');
+    chip.innerHTML =
+      (rank >= 0 ? `<span class="prio-rank">${rank + 1}</span>` : `<span class="provider-dot ${PROVIDER_DOTS[p]}"></span>`) +
+      `${PROVIDER_NAMES[p] || p}`;
+    chip.addEventListener('click', () => toggleProvider(p));
+    host.appendChild(chip);
+  });
+  if (config.providerOrder.length) {
+    const reset = document.createElement('button');
+    reset.className = 'prio-reset';
+    reset.title = 'Reset order';
+    reset.textContent = '↺';
+    reset.addEventListener('click', () => { config.providerOrder = []; onPriorityChanged(); });
+    host.appendChild(reset);
+  } else {
+    const hint = document.createElement('div');
+    hint.className = 'prio-hint';
+    hint.textContent = 'Nothing selected — all providers with keys will be tried in default order.';
+    host.appendChild(hint);
+  }
+}
+
+function toggleProvider(p) {
+  const arr = config.providerOrder;
+  const i = arr.indexOf(p);
+  if (i >= 0) arr.splice(i, 1);
+  else {
+    arr.push(p);
+    // Selecting Ollama means the user wants it used — enable it.
+    if (p === 'ollama' && !config.ollamaEnabled) {
+      config.ollamaEnabled = true;
+      const chk = document.getElementById('ollamaEnabled');
+      if (chk) chk.checked = true;
+    }
+  }
+  onPriorityChanged();
+}
+
+function onPriorityChanged() {
+  config.primaryProvider = config.providerOrder[0] || '';
+  saveConfig();
+  renderPriorityList();
+  updateProviderIndicator();
+}
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+function switchTab(name) {
+  activeTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  chatPaneEl.classList.toggle('hidden',  name !== 'chat');
+  audioPaneEl.classList.toggle('hidden', name !== 'audio');
+  btnToggleSet.style.display = name === 'chat' ? '' : 'none';
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+// ══════════════════════════════════════════════
+//  SETTINGS TOGGLE
+// ══════════════════════════════════════════════
+btnToggleSet.addEventListener('click', () => {
+  const collapsed = settingsPanelEl.classList.contains('collapsed');
+  settingsPanelEl.classList.toggle('collapsed', !collapsed);
+  btnToggleSet.classList.toggle('active', collapsed);
+  config.settingsOpen = collapsed;
+  saveConfig();
+  // Opening settings restores the full panel window so everything is usable again.
+  if (collapsed) applyWindowMode('full');
+});
+
+// ══════════════════════════════════════════════
+//  SAVE & START
+// ══════════════════════════════════════════════
+// Switch the Electron window between the full side-panel and the small compact square.
+function applyWindowMode(mode) {
+  document.body.classList.toggle('compact', mode === 'compact');
+  if (window.electron && typeof window.electron.setWindowMode === 'function') {
+    try { window.electron.setWindowMode(mode); } catch (e) {}
+  }
+}
+
+btnSave.addEventListener('click', () => {
+  readFormToConfig();
+  const hasKey = ALL_PROVIDERS.some(p => config[cfgKey(p)]);
+  if (!hasKey && !config.ollamaEnabled) { alert('Enter at least one API key OR enable Ollama'); return; }
+  config.settingsOpen = false;
+  saveConfig();
+  renderPriorityList();
+  settingsPanelEl.classList.add('collapsed');
+  btnToggleSet.classList.remove('active');
+  updateProviderIndicator();
+  addSysMsg('✓ Session started · Screenshot: Ctrl+Shift+Space · Record question: Ctrl+Shift+L (start / stop)');
+  setStatus('READY', '');
+  applyWindowMode('compact');  // shrink to the small semi-transparent session square
+});
+
+function updateProviderIndicator() {
+  const el = document.getElementById('providerIndicator');
+  if (!el) return;
+  // Show the first provider that will actually be tried.
+  const p = getProviderOrder().find(x => x === 'ollama' ? config.ollamaEnabled : getKey(x));
+  if (p) { el.textContent = p.toUpperCase(); el.style.display = 'block'; return; }
+  el.style.display = 'none';
+}
+
+// ══════════════════════════════════════════════
+//  AUDIO DEVICES
+// ══════════════════════════════════════════════
+async function loadAudioDevices() {
+  try {
+    // Briefly open the mic only to unlock device labels, then release it immediately
+    // so we don't leave the microphone active (which would light the OS mic indicator).
+    const probe = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(() => null);
+    if (probe) probe.getTracks().forEach(t => t.stop());
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const inputs = devs.filter(d => d.kind === 'audioinput');
+    // Populate the main device select plus the two diarization selects from the same list.
+    [['audioDeviceLive', 'audioDeviceId'],
+     ['interviewerDevice', 'interviewerDeviceId'],
+     ['myMicDevice', 'myMicDeviceId']].forEach(([selId, cfgId]) => {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '';
+      inputs.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.textContent = d.label || 'Microphone ' + d.deviceId.slice(0, 6);
+        if (config[cfgId] === d.deviceId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+  } catch(e) {}
+}
+document.getElementById('btnRefreshDevices')?.addEventListener('click', loadAudioDevices);
+
+function applyDiarizeUI() {
+  const box = document.getElementById('diarizeDevices');
+  if (box) box.style.display = config.diarize ? 'flex' : 'none';
+}
+document.getElementById('diarizeEnabled')?.addEventListener('change', (e) => {
+  config.diarize = e.target.checked;
+  saveConfig();
+  applyDiarizeUI();
+  // If we're mid-session, restart listening so the new source layout takes effect.
+  if (isListening) { stopListening(); startListening(); }
+});
+
+// ══════════════════════════════════════════════
+//  SYSTEM PROMPT
+// ══════════════════════════════════════════════
+function buildSystemPrompt() {
+  let s = `You are a real-time interview assistant helping the user during a live job interview.
+
+Rules:
+- ALWAYS reply in the SAME LANGUAGE as the question (Russian → Russian, Ukrainian → Ukrainian, English → English). Mixed → match the dominant language.
+- Sound like a confident, experienced human professional. No AI phrases, no buzzwords.
+- Use first person ("I worked on...", "In my experience...").
+- Coding tasks: provide working, clean code with a brief explanation.
+- Behavioral questions: natural, concise answer. STAR format if needed but don't be robotic.
+- Keep answers appropriately brief — 2-4 sentences unless depth is clearly needed. Do NOT pad answers.
+- If you're asked about resume/experience — give specific, confident answers using the provided background.
+- IMPORTANT: Be concise. Short clear answers save tokens and are better for interviews.`;
+
+  if (config.position)     s += `\n\nRole being interviewed for: ${config.position}`;
+  if (config.resume)       s += `\n\nCandidate background (use for personalized answers):\n${config.resume}`;
+  if (config.customPrompt) s += `\n\nAdditional instructions:\n${config.customPrompt}`;
+  return s;
+}
+
+// ══════════════════════════════════════════════
+//  AI PROVIDERS
+// ══════════════════════════════════════════════
+function getProviderOrder() {
+  // Only the providers the user clicked, in click order. Nothing picked → all, default order.
+  const order = (Array.isArray(config.providerOrder) && config.providerOrder.length)
+    ? [...config.providerOrder]
+    : ['gemini','groq','zai','anthropic','openai','deepseek','ollama'];
+  return order.filter(p => p !== 'ollama' || config.ollamaEnabled);
+}
+function getKey(p) {
+  return config[cfgKey(p)] || '';
+}
+function getModel(p) {
+  return config[cfgModel(p)] || '';
+}
+
+// Which providers can actually read an image (so screenshots aren't silently dropped).
+// Groq/Ollama depend on the selected model — gpt-oss / most Ollama models are text-only.
+function providerSupportsVision(p) {
+  if (p === 'anthropic' || p === 'gemini' || p === 'openai') return true;
+  if (p === 'groq')   return /vision|llama-4|scout|maverick|llava/i.test(config.modelGroq || '');
+  if (p === 'ollama') return /llava|vision|moondream|bakllava|minicpm|qwen2.*vl/i.test(config.ollamaModel || '');
+  if (p === 'zai')    return /vision|4\.5v|^glm-4\.6/i.test(config.modelZai || '');
+  return false; // deepseek: text-only
+}
+
+function aiBusyNote() {
+  addSysMsg('⏳ Please wait — previous request is still processing.');
+}
+
+// Keep memory bounded: cap history and drop base64 images from all but the latest.
+function trimMessages() {
+  const MAX = 40;
+  if (messages.length > MAX) messages = messages.slice(-MAX);
+  let keptImage = false;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i] && messages[i]._image) {
+      if (keptImage) delete messages[i]._image;
+      else keptImage = true;
+    }
+  }
+}
+
+// Single serialized path for every AI request (voice, manual, screenshot, follow-up).
+// Prevents concurrent requests from interleaving pushes/pops on the shared messages[].
+async function runAIExchange(opts = {}) {
+  const idle = opts.idleStatus || ['READY', ''];
+  if (isThinking) { aiBusyNote(); setStatus(idle[0], idle[1]); return; }
+  isThinking = true;
+  if (btnSend) btnSend.disabled = true;
+
+  const userMsg = opts.userMsg || { role: 'user', content: opts.content || '' };
+  messages.push(userMsg);
+  trimMessages();
+
+  const thinking = addThinking();
+  setStatus('THINKING', 'thinking');
+  try {
+    const { text, provider, model } = await askAI(messages);
+    messages.push({ role: 'assistant', content: text });
+    trimMessages();
+    thinking.remove();
+    addAIMessage(text, provider, model);
+    if (opts.successStatus) {
+      setStatus(opts.successStatus[0], opts.successStatus[1]);
+      setTimeout(() => setStatus(idle[0], idle[1]), 2000);
+    } else {
+      setStatus(idle[0], idle[1]);
+    }
+  } catch (err) {
+    thinking.remove();
+    const i = messages.indexOf(userMsg);   // remove THIS request's message, not whatever is last
+    if (i >= 0) messages.splice(i, 1);
+    addError(err.message);
+    setStatus('ERROR', 'error');
+    setTimeout(() => setStatus(idle[0], idle[1]), 3000);
+  } finally {
+    isThinking = false;
+    if (btnSend) btnSend.disabled = false;
+  }
+}
+
+async function askAI(msgs) {
+  const trimmed = msgs.slice(-6); // keep a bit more context for follow-ups
+  const errors = [];
+
+  // If the request includes a screenshot, prefer vision-capable providers so the
+  // image isn't dropped. Fall back to the full order only if none support vision.
+  let order = getProviderOrder();
+  if (trimmed.some(m => m._image)) {
+    const vision = order.filter(providerSupportsVision);
+    if (vision.length) order = vision;
+    else addSysMsg('⚠ No selected provider can see images — response will be text-only. Add Gemini/Groq/OpenAI/Anthropic.');
+  }
+
+  for (const provider of order) {
+    try {
+      let result, model;
+      if (provider === 'ollama') {
+        if (!config.ollamaEnabled || !config.ollamaModel) continue;
+        model = config.ollamaModel;
+        result = await callOllama(model, trimmed);
+      } else {
+        const key = getKey(provider);
+        if (!key) continue;
+        model = getModel(provider);
+        result = await callProvider(provider, key, model, trimmed);
+      }
+      return { text: result, provider, model };
+    } catch(err) {
+      const msg = err.message || '';
+      const is429 = /429|rate.?limit|quota|exceeded|tokens? per/i.test(msg);
+      errors.push(`${provider}: ${msg.slice(0, 80)}`);
+      addSysMsg(`⚡ ${provider} → ${msg.slice(0, 100)}`);
+      if (is429) await new Promise(r => setTimeout(r, 500));
+    }
+  }
+
+  throw new Error('All providers unavailable. ' + (errors[0] || 'Check API keys / whether Ollama is running.'));
+}
+
+// Ollama — local, no key, no rate limits. Requires `ollama serve` running on host.
+async function callOllama(model, msgs) {
+  const base = (config.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
+  const apiMsgs = [{ role: 'system', content: buildSystemPrompt() },
+    ...msgs.filter(m => !m._image).map(m => ({ role: m.role, content: m.content }))];
+  const res = await fetch(base + '/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages: apiMsgs, stream: false })
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => res.statusText);
+    throw new Error(`Ollama ${res.status}: ${t.slice(0, 150)}`);
+  }
+  const d = await res.json();
+  if (d?.message?.content) return d.message.content;
+  throw new Error('Ollama: unexpected response — model installed? (ollama pull ' + model + ')');
+}
+
+async function callProvider(p, k, m, msgs) {
+  if (p === 'groq')      return callGroq(k, m, msgs);
+  if (p === 'anthropic') return callAnthropic(k, m, msgs);
+  if (p === 'gemini')    return callGemini(k, m, msgs);
+  if (p === 'openai')    return callOpenAI(k, m, msgs);
+  if (p === 'deepseek')  return callDeepseek(k, m, msgs);
+  if (p === 'zai')       return callZai(k, m, msgs);
+  throw new Error('Unknown provider: ' + p);
+}
+
+// Groq — OpenAI-compatible (supports vision on gpt-oss models)
+async function callGroq(key, model, msgs) {
+  const apiMsgs = [{ role: 'system', content: buildSystemPrompt() },
+    ...msgs.map(m => m._image
+      ? { role: 'user', content: [{ type: 'image_url', image_url: { url: `data:image/png;base64,${m._image}` } }, { type: 'text', text: m.content }] }
+      : { role: m.role, content: m.content })];
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({ model, max_tokens: 1200, messages: apiMsgs })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
+  return (await res.json()).choices[0].message.content;
+}
+
+async function callAnthropic(key, model, msgs) {
+  const apiMsgs = msgs.map(m => m._image
+    ? { role: 'user', content: [{ type: 'image', source: { type: 'base64', media_type: 'image/png', data: m._image } }, { type: 'text', text: m.content }] }
+    : { role: m.role, content: m.content });
+  // Anthropic requires the first message to be a 'user' turn — drop any leading
+  // assistant messages left over after slice(-6), otherwise it 400s mid-conversation.
+  while (apiMsgs.length && apiMsgs[0].role !== 'user') apiMsgs.shift();
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({ model, max_tokens: 1200, system: buildSystemPrompt(), messages: apiMsgs })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
+  return (await res.json()).content[0].text;
+}
+
+async function callGemini(key, model, msgs) {
+  const contents = [];
+  for (const m of msgs) {
+    const role = m.role === 'assistant' ? 'model' : 'user';
+    const parts = m._image
+      ? [{ inline_data: { mime_type: 'image/png', data: m._image } }, { text: m.content }]
+      : [{ text: m.content }];
+    if (contents.length && contents[contents.length - 1].role === role)
+      contents[contents.length - 1].parts.push(...parts);
+    else contents.push({ role, parts });
+  }
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system_instruction: { parts: [{ text: buildSystemPrompt() }] }, contents, generationConfig: { maxOutputTokens: 1200 } })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
+  const d = await res.json();
+  if (d.candidates?.[0]?.content?.parts?.[0]?.text) return d.candidates[0].content.parts[0].text;
+  throw new Error('Gemini: unexpected response');
+}
+
+async function callOpenAI(key, model, msgs) {
+  const apiMsgs = [{ role: 'system', content: buildSystemPrompt() },
+    ...msgs.map(m => m._image
+      ? { role: 'user', content: [{ type: 'image_url', image_url: { url: `data:image/png;base64,${m._image}` } }, { type: 'text', text: m.content }] }
+      : { role: m.role, content: m.content })];
+  const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({ model, max_tokens: 1200, messages: apiMsgs })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
+  return (await res.json()).choices[0].message.content;
+}
+
+async function callDeepseek(key, model, msgs) {
+  const apiMsgs = [{ role: 'system', content: buildSystemPrompt() }, ...msgs.map(m => ({ role: m.role, content: m.content }))];
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({ model, max_tokens: 1200, messages: apiMsgs })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
+  return (await res.json()).choices[0].message.content;
+}
+
+// Z.ai (Zhipu) — OpenAI-compatible. Free tier for GLM-4.5-Flash. Auth: Bearer token.
+// Docs: https://docs.z.ai/guides/overview/quick-start
+async function callZai(key, model, msgs) {
+  const apiMsgs = [{ role: 'system', content: buildSystemPrompt() },
+    ...msgs.filter(m => !m._image).map(m => ({ role: m.role, content: m.content }))];
+  const res = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({ model, max_tokens: 1200, messages: apiMsgs, stream: false })
+  });
+  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
+  return (await res.json()).choices[0].message.content;
+}
+
+// ══════════════════════════════════════════════
+//  GROQ WHISPER TRANSCRIPTION
+// ══════════════════════════════════════════════
+async function transcribeWithGroq(audioBlob) {
+  const key = config.keyGroq;
+  if (!key) throw new Error('Groq API key not set');
+
+  // Convert to wav-compatible format if needed
+  const formData = new FormData();
+  // Groq accepts webm — use it directly
+  formData.append('file', audioBlob, 'audio.webm');
+  formData.append('model', 'whisper-large-v3-turbo');
+  if (config.whisperLang) formData.append('language', config.whisperLang);
+  formData.append('response_format', 'json');
+
+  const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}` },
+    body: formData
+  });
+
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(`Whisper ${res.status}: ${e.error?.message || res.statusText}`);
+  }
+  const d = await res.json();
+  return d.text?.trim() || '';
+}
+
+// OpenAI Whisper — fallback transcription
+async function transcribeWithOpenAI(audioBlob) {
+  const key = config.keyOpenAI;
+  if (!key) throw new Error('OpenAI key not set');
+  const fd = new FormData();
+  fd.append('file', audioBlob, 'audio.webm');
+  fd.append('model', 'whisper-1');
+  if (config.whisperLang) fd.append('language', config.whisperLang);
+  fd.append('response_format', 'json');
+  const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}` },
+    body: fd
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(`OpenAI Whisper ${res.status}: ${e.error?.message || res.statusText}`);
+  }
+  return (await res.json()).text?.trim() || '';
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onloadend = () => resolve(String(r.result).split(',')[1] || '');
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+// Gemini multimodal — transcribe audio inline (free tier). Fallback when no Whisper key.
+async function transcribeWithGemini(audioBlob) {
+  const key = config.keyGemini;
+  if (!key) throw new Error('Gemini key not set');
+  const b64 = await blobToBase64(audioBlob);
+  if (!b64) throw new Error('Gemini: empty audio');
+  const model = config.modelGemini || 'gemini-flash-latest';
+  const langHint = config.whisperLang ? ` The spoken language is "${config.whisperLang}".` : '';
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ role: 'user', parts: [
+        { inline_data: { mime_type: (audioBlob.type || 'audio/webm').split(';')[0], data: b64 } },
+        { text: `Transcribe this audio verbatim. Output ONLY the raw transcription text with no commentary, labels or quotation marks.${langHint}` }
+      ] }],
+      generationConfig: { maxOutputTokens: 500, temperature: 0 }
+    })
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(`Gemini audio ${res.status}: ${e.error?.message || res.statusText}`);
+  }
+  const d = await res.json();
+  return d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+}
+
+// True if any transcription-capable provider has a key.
+function canTranscribe() {
+  return !!(config.keyGroq || config.keyOpenAI || config.keyGemini);
+}
+
+// Try every available transcription provider in turn (Groq Whisper → OpenAI Whisper → Gemini).
+async function transcribeAudio(audioBlob) {
+  const attempts = [];
+  if (config.keyGroq)   attempts.push(['Groq Whisper',   () => transcribeWithGroq(audioBlob)]);
+  if (config.keyOpenAI) attempts.push(['OpenAI Whisper', () => transcribeWithOpenAI(audioBlob)]);
+  if (config.keyGemini) attempts.push(['Gemini',         () => transcribeWithGemini(audioBlob)]);
+  if (!attempts.length) throw new Error('No voice transcription key. Add a Groq, OpenAI, or Gemini key.');
+
+  const errs = [];
+  for (const [name, fn] of attempts) {
+    try {
+      const t = await fn();
+      if (t && t.trim()) return t.trim();
+      errs.push(`${name}: empty`);
+    } catch (e) {
+      errs.push(`${name}: ${(e.message || '').slice(0, 70)}`);
+    }
+  }
+  throw new Error('Transcription failed → ' + errs.join(' · '));
+}
+
+// Wrap a transcript so the AI answers a spoken question OR solves a spoken/explained task.
+function buildVoiceUserContent(transcript, speaker) {
+  const who = speaker === 'INTERVIEWER' ? 'the interviewer' : 'the speaker';
+  return `(Voice transcription of what ${who} just said) "${transcript}"\n\n` +
+    `Understand it and respond directly: if it's a question, answer it; if it's a task or problem being explained, solve it. Reply in the same language that was spoken.`;
+}
+
+// ══════════════════════════════════════════════
+//  AUDIO RECORDING — MediaRecorder + silence detection
+// ══════════════════════════════════════════════
+async function toggleListen() {
+  if (!isListening) await startListening();
+  else stopListening();
+}
+
+async function startListening() {
+  if (isListening || listenStarting) return;   // guard double Ctrl+Shift+L before isListening flips
+  listenStarting = true;
+  readFormToConfig();
+
+  if (!canTranscribe()) {
+    addError('For voice transcription, add a Groq, OpenAI, or Gemini key (Chat tab → AI Providers, or Audio).');
+    listenStarting = false;
+    return;
+  }
+
+  // Never run auto-listen and manual record at the same time (double mic capture).
+  if (manualRecording) stopManualRecording();
+
+  try {
+    // In diarization mode the transcribed channel is the INTERVIEWER (system/loopback);
+    // otherwise it's the single selected device.
+    const deviceId = config.diarize
+      ? (config.interviewerDeviceId || document.getElementById('interviewerDevice')?.value || config.audioDeviceId)
+      : (document.getElementById('audioDeviceLive')?.value || config.audioDeviceId);
+
+    // Don't force sampleRate — let browser/OS decide, Whisper handles any rate
+    // echoCancellation: true helps with mic, false for VB-Cable (meeting audio)
+    const audioConstraints = deviceId
+      ? { deviceId: { exact: deviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      : { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+
+    currentStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+
+    // Analyser for silence detection only — no resampling needed
+    analyserCtx  = new AudioContext();
+    const source = analyserCtx.createMediaStreamSource(currentStream);
+    analyserNode = analyserCtx.createAnalyser();
+    analyserNode.fftSize = 1024;
+    analyserNode.smoothingTimeConstant = 0.3;
+    source.connect(analyserNode);
+
+    isListening = true;
+    listenStarting = false;
+    setStatus('LISTENING', 'listening');
+    updateListenStatus(true);
+    showListenBar();
+    startRecordingChunk();
+
+    // Diarization: also monitor my own mic so we know when I'm speaking vs the interviewer.
+    if (config.diarize) {
+      startMyMicMonitor(config.myMicDeviceId || document.getElementById('myMicDevice')?.value);
+    }
+
+  } catch(err) {
+    addError('Microphone error: ' + err.message);
+    // Clean up anything we half-acquired so we don't leak the mic / AudioContext.
+    try { analyserCtx?.close(); } catch(e) {}
+    analyserCtx = null; analyserNode = null;
+    currentStream?.getTracks().forEach(t => t.stop());
+    currentStream = null;
+    listenStarting = false;
+  }
+}
+
+function stopListening() {
+  isListening      = false;
+  listenStarting   = false;
+  isRecordingChunk = false;
+  stopMyMicMonitor();
+  clearInterval(silenceInterval); silenceInterval = null;
+  clearTimeout(autoMaxTimer);     autoMaxTimer = null;
+  setStatus('READY', '');
+  updateListenStatus(false);
+  removeListenBar();
+  stopVolumeMeter();
+
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    try { mediaRecorder.stop(); } catch(e) {}
+  }
+  mediaRecorder = null; audioChunks = [];
+
+  try { analyserCtx?.close(); } catch(e) {}
+  analyserCtx = null; analyserNode = null;
+
+  currentStream?.getTracks().forEach(t => t.stop());
+  currentStream = null;
+}
+
+// Start recording one chunk — will stop on silence, then restart
+function startRecordingChunk() {
+  if (!isListening || !currentStream) return;
+
+  audioChunks = [];
+  isRecordingChunk = true;
+
+  try {
+    // Use webm which Groq Whisper accepts
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+
+    mediaRecorder = new MediaRecorder(currentStream, { mimeType });
+  } catch(e) {
+    mediaRecorder = new MediaRecorder(currentStream);
+  }
+
+  mediaRecorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) audioChunks.push(e.data);
+  };
+
+  mediaRecorder.onstop = async () => {
+    clearTimeout(autoMaxTimer); autoMaxTimer = null;
+    if (!isRecordingChunk) return; // was explicitly stopped
+    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    audioChunks = [];
+
+    // Skip chunks too short to be real speech — restart silently (no chat spam).
+    if (blob.size < 3000) {
+      if (isListening) startRecordingChunk();
+      return;
+    }
+
+    await processAudioChunk(blob);
+
+    // Restart recording for next question
+    if (isListening) startRecordingChunk();
+  };
+
+  mediaRecorder.start(100); // collect data every 100ms
+
+  // Hard cap: always flush the chunk even if silence never triggers (constant noise).
+  clearTimeout(autoMaxTimer);
+  autoMaxTimer = setTimeout(() => {
+    if (isListening && mediaRecorder && mediaRecorder.state === 'recording') {
+      try { mediaRecorder.stop(); } catch(e) {}  // onstop transcribes + restarts
+    }
+  }, 25000);
+
+  // Start silence detection loop
+  detectSilence();
+}
+
+function detectSilence() {
+  if (!isListening || !analyserNode) return;
+  clearInterval(silenceInterval);
+
+  const data      = new Uint8Array(analyserNode.frequencyBinCount);
+  const silenceMs = config.silenceThresh || 1800;
+  // Map the 300–3400 Hz speech band to bins for the ACTUAL sample rate (not a hardcoded 48kHz).
+  const sr       = (analyserCtx && analyserCtx.sampleRate) || 48000;
+  const hzPerBin = sr / analyserNode.fftSize;
+  const loBin    = Math.max(1, Math.floor(300 / hzPerBin));
+  const hiBin    = Math.min(data.length - 1, Math.ceil(3400 / hzPerBin));
+  let silenceStart = null;
+  let hasSpeech    = false;
+
+  // setInterval (not requestAnimationFrame) so detection keeps running while the
+  // window is hidden — rAF is paused for hidden documents even with throttling off.
+  silenceInterval = setInterval(() => {
+    if (!isListening || !analyserNode) { clearInterval(silenceInterval); silenceInterval = null; return; }
+
+    analyserNode.getByteFrequencyData(data);
+
+    let sum = 0, count = 0;
+    for (let i = loBin; i <= hiBin; i++) { sum += data[i] * data[i]; count++; }
+    const rms = count > 0 ? Math.sqrt(sum / count) : 0;
+
+    // Volume bar (full spectrum for visual)
+    let fullSum = 0;
+    for (let i = 0; i < data.length; i++) fullSum += data[i] * data[i];
+    const fullRms = Math.sqrt(fullSum / data.length);
+    if (volBar) volBar.style.width = Math.min(100, fullRms * 1.2) + '%';
+
+    const isSilent = rms < 8;
+
+    if (!isSilent) {
+      hasSpeech    = true;
+      silenceStart = null;
+    } else if (hasSpeech) {
+      if (!silenceStart) silenceStart = Date.now();
+      if (Date.now() - silenceStart > silenceMs) {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          hasSpeech    = false;
+          silenceStart = null;
+          clearInterval(silenceInterval); silenceInterval = null;
+          mediaRecorder.stop();  // onstop transcribes + restarts
+        }
+      }
+    }
+  }, 60);
+}
+
+// Process audio chunk: transcribe → send to AI
+async function processAudioChunk(blob) {
+  setStatus('TRANSCRIBING', 'transcribing');
+
+  let transcript = '';
+  try {
+    transcript = await transcribeAudio(blob);
+  } catch(err) {
+    addError('Transcription error: ' + err.message);
+    setStatus('LISTENING', 'listening');
+    return;
+  }
+
+  if (!transcript || transcript.length < 3) {
+    setStatus('LISTENING', 'listening');
+    return;
+  }
+
+  addTranscriptLog(transcript);
+
+  // Switch to chat tab and show question
+  if (activeTab !== 'chat') switchTab('chat');
+  const speaker = config.diarize ? 'INTERVIEWER' : 'HEARD';
+  addTranscribedMessage(transcript, speaker);
+
+  await runAIExchange({
+    content: buildVoiceUserContent(transcript, speaker),
+    idleStatus: isListening ? ['LISTENING', 'listening'] : ['READY', '']
+  });
+}
+
+// Auto-mode volume bar is driven inside the detectSilence interval; this just resets it.
+function stopVolumeMeter() {
+  if (volBar) volBar.style.width = '0%';
+}
+
+// Monitor MY microphone purely for voice activity, so we can show when the user is
+// talking (vs the interviewer). Does NOT transcribe or send anything to the AI.
+async function startMyMicMonitor(deviceId) {
+  try {
+    const constraints = deviceId
+      ? { deviceId: { exact: deviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      : { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+    myMicStream = await navigator.mediaDevices.getUserMedia({ audio: constraints });
+    myMicCtx  = new AudioContext();
+    const src = myMicCtx.createMediaStreamSource(myMicStream);
+    myMicNode = myMicCtx.createAnalyser();
+    myMicNode.fftSize = 1024;
+    myMicNode.smoothingTimeConstant = 0.3;
+    src.connect(myMicNode);
+
+    const data = new Uint8Array(myMicNode.frequencyBinCount);
+    const sr = myMicCtx.sampleRate || 48000;
+    const hzPerBin = sr / myMicNode.fftSize;
+    const loBin = Math.max(1, Math.floor(300 / hzPerBin));
+    const hiBin = Math.min(data.length - 1, Math.ceil(3400 / hzPerBin));
+    const ind = document.getElementById('meSpeakingInd');
+
+    myMicInterval = setInterval(() => {
+      if (!myMicNode) return;
+      myMicNode.getByteFrequencyData(data);
+      let sum = 0, count = 0;
+      for (let i = loBin; i <= hiBin; i++) { sum += data[i] * data[i]; count++; }
+      const rms = count ? Math.sqrt(sum / count) : 0;
+      userSpeaking = rms >= 10;
+      if (ind) ind.textContent = userSpeaking ? '🗣 You are speaking…' : '🎧 Listening to the speaker…';
+    }, 80);
+  } catch (err) {
+    addSysMsg('⚠ My microphone is not available for voice separation: ' + err.message);
+  }
+}
+
+function stopMyMicMonitor() {
+  clearInterval(myMicInterval); myMicInterval = null;
+  try { myMicCtx?.close(); } catch (e) {}
+  myMicCtx = null; myMicNode = null;
+  myMicStream?.getTracks().forEach(t => t.stop());
+  myMicStream = null;
+  userSpeaking = false;
+  const ind = document.getElementById('meSpeakingInd');
+  if (ind) ind.textContent = '';
+}
+
+// ══════════════════════════════════════════════
+//  MANUAL RECORD — Tap to start, tap to stop. Always works.
+// ══════════════════════════════════════════════
+let manualRecording  = false;
+let manualStream     = null;
+let manualRecorder   = null;
+let manualChunks     = [];
+let manualMaxTimer   = null;
+let manualVolCtx     = null;
+let manualVolNode    = null;
+let manualVolRAF     = null;
+let manualStartTime  = 0;
+let manualTickInt    = null;
+
+async function toggleManualRecord() {
+  if (manualRecording) stopManualRecording();
+  else await startManualRecording();
+}
+
+let manualStarting = false;
+async function startManualRecording() {
+  if (manualRecording || manualStarting) return;   // guard double-tap before stream is ready
+  manualStarting = true;
+  readFormToConfig();
+  if (!canTranscribe()) {
+    manualStarting = false;
+    addError('For voice transcription, add a Groq, OpenAI, or Gemini key.');
+    return;
+  }
+  // Don't fight with auto mode
+  if (isListening) stopListening();
+
+  try {
+    const deviceId = document.getElementById('audioDeviceLive')?.value || config.audioDeviceId;
+    const constraints = deviceId
+      ? { audio: { deviceId: { exact: deviceId }, echoCancellation: false, noiseSuppression: false, autoGainControl: false } }
+      : { audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } };
+
+    manualStream = await navigator.mediaDevices.getUserMedia(constraints);
+    manualChunks = [];
+
+    let mimeType = '';
+    if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mimeType = 'audio/webm;codecs=opus';
+    else if (MediaRecorder.isTypeSupported('audio/webm'))   mimeType = 'audio/webm';
+    else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) mimeType = 'audio/ogg;codecs=opus';
+
+    manualRecorder = mimeType ? new MediaRecorder(manualStream, { mimeType }) : new MediaRecorder(manualStream);
+
+    manualRecorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) manualChunks.push(e.data);
+    };
+
+    manualRecorder.onstop = async () => {
+      const blob = new Blob(manualChunks, { type: manualRecorder.mimeType || 'audio/webm' });
+      manualChunks = [];
+      stopManualVolumeMeter();
+      if (manualVolCtx) { try { manualVolCtx.close(); } catch(e){} manualVolCtx = null; manualVolNode = null; }
+      manualStream?.getTracks().forEach(t => t.stop());
+      manualStream = null;
+      manualRecorder = null;
+      clearInterval(manualTickInt);
+      updateRecordUI(false);
+
+      if (blob.size < 1000) {
+        addError('Recording too short (<1KB). Speak longer or closer to the microphone.');
+        setStatus('READY', '');
+        return;
+      }
+
+      await processManualRecording(blob);
+    };
+
+    manualRecorder.start(100);
+    manualRecording  = true;
+    manualStarting   = false;
+    manualStartTime  = Date.now();
+    updateRecordUI(true);
+    setStatus('LISTENING', 'listening');
+
+    // Volume meter
+    manualVolCtx = new AudioContext();
+    const src    = manualVolCtx.createMediaStreamSource(manualStream);
+    manualVolNode = manualVolCtx.createAnalyser();
+    manualVolNode.fftSize = 1024;
+    manualVolNode.smoothingTimeConstant = 0.3;
+    src.connect(manualVolNode);
+    startManualVolumeMeter();
+
+    // Live timer
+    manualTickInt = setInterval(() => updateRecordUI(true), 250);
+
+    // Safety: auto-stop after 90s
+    clearTimeout(manualMaxTimer);
+    manualMaxTimer = setTimeout(() => {
+      if (manualRecording) {
+        addSysMsg('⏱ 90s reached — auto-stopping');
+        stopManualRecording();
+      }
+    }, 90000);
+
+  } catch(err) {
+    addError('Microphone error: ' + err.message);
+    // Stop any tracks we acquired before the failure so the mic doesn't stay live.
+    try { manualStream?.getTracks().forEach(t => t.stop()); } catch(e) {}
+    try { manualVolCtx?.close(); } catch(e) {}
+    manualStream = null; manualVolCtx = null; manualVolNode = null;
+    manualRecording = false;
+    manualStarting = false;
+    clearInterval(manualTickInt);
+    clearTimeout(manualMaxTimer);
+    updateRecordUI(false);
+    setStatus('READY', '');
+  }
+}
+
+function stopManualRecording() {
+  if (!manualRecording) return;
+  manualRecording = false;
+  clearTimeout(manualMaxTimer);
+  setStatus('TRANSCRIBING', 'transcribing');
+  if (manualRecorder && manualRecorder.state !== 'inactive') {
+    try { manualRecorder.stop(); } catch(e) {}
+  }
+}
+
+function startManualVolumeMeter() {
+  const data = new Uint8Array(manualVolNode.frequencyBinCount);
+  function tick() {
+    if (!manualVolNode || !manualRecording) return;
+    manualVolNode.getByteFrequencyData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) sum += data[i] * data[i];
+    const rms = Math.sqrt(sum / data.length);
+    if (volBar) volBar.style.width = Math.min(100, rms * 1.2) + '%';
+    manualVolRAF = requestAnimationFrame(tick);
+  }
+  tick();
+}
+function stopManualVolumeMeter() {
+  cancelAnimationFrame(manualVolRAF);
+  if (volBar) volBar.style.width = '0%';
+}
+
+function updateRecordUI(rec) {
+  const btn = document.getElementById('btnManualRecord');
+  const lbl = document.getElementById('recordLabel');
+  const tmr = document.getElementById('recordTimer');
+  if (!btn) return;
+  if (rec) showRecBar(); else removeRecBar();
+  if (rec) {
+    btn.classList.add('recording');
+    if (lbl) lbl.textContent = '⏹ Stop & Process';
+    if (tmr) tmr.textContent = '🔴 ' + formatDuration(Date.now() - manualStartTime);
+  } else {
+    btn.classList.remove('recording');
+    if (lbl) lbl.textContent = '🎤 Tap to Record';
+    if (tmr) tmr.textContent = '';
+  }
+}
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+}
+
+async function processManualRecording(blob) {
+  let transcript = '';
+  try {
+    transcript = await transcribeAudio(blob);
+  } catch(err) {
+    addError('Whisper: ' + err.message);
+    setStatus('READY', '');
+    return;
+  }
+  if (!transcript || transcript.length < 3) {
+    addError('Could not recognize speech. Try again — speak more clearly.');
+    setStatus('READY', '');
+    return;
+  }
+  addTranscriptLog(transcript);
+  if (activeTab !== 'chat') switchTab('chat');
+  addTranscribedMessage(transcript);
+
+  await runAIExchange({ content: buildVoiceUserContent(transcript), idleStatus: ['READY', ''] });
+}
+
+// ══════════════════════════════════════════════
+//  OLLAMA TEST
+// ══════════════════════════════════════════════
+async function testOllama() {
+  const url  = (config.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
+  const out  = document.getElementById('ollamaTestResult');
+  if (out) { out.textContent = '⏳ Testing ' + url + ' ...'; out.style.color = 'var(--muted2)'; }
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 5000);
+    const res  = await fetch(url + '/api/tags', { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const models = (data.models || []).map(m => m.name);
+    if (out) {
+      out.textContent = '✓ OK · ' + models.length + ' models: ' + models.slice(0, 5).join(', ') + (models.length > 5 ? '…' : '');
+      out.style.color = 'var(--green)';
+    }
+  } catch(err) {
+    if (out) {
+      const reason = err.name === 'AbortError' ? 'timeout (5s)' : err.message;
+      out.textContent = '✗ ' + reason + ' — make sure Ollama is running';
+      out.style.color = 'var(--red)';
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SCREENSHOT FLOW
+// ══════════════════════════════════════════════
+async function handleScreenshot(base64) {
+  if (activeTab !== 'chat') switchTab('chat');
+  readFormToConfig();
+  if (isThinking) { aiBusyNote(); setStatus('READY', ''); return; }
+
+  addScreenshotPreview(base64);
+  await runAIExchange({
+    userMsg: { role: 'user', content: 'What is the interview question or task in this screenshot? Give the best answer.', _image: base64 },
+    idleStatus: ['READY', ''],
+    successStatus: ['DONE', 'done']
+  });
+}
+
+// ══════════════════════════════════════════════
+//  FOLLOW-UP
+// ══════════════════════════════════════════════
+async function sendFollowUp(text) {
+  if (!text.trim()) return;
+  if (isThinking) { aiBusyNote(); return; }
+  readFormToConfig();
+  addUserMessage(text);
+  await runAIExchange({ content: text, idleStatus: ['READY', ''] });
+}
+
+// ══════════════════════════════════════════════
+//  ELECTRON BRIDGE
+// ══════════════════════════════════════════════
+if (window.electron) {
+  window.electron.onStartCapture(()      => setStatus('CAPTURING', 'capturing'));
+  window.electron.onScreenshotReady(b64  => handleScreenshot(b64));
+  window.electron.onToggleListen(()      => toggleManualRecord());  // same as the red Record button
+  window.electron.onError(msg           => { addError(msg); setStatus('ERROR', 'error'); });
+  window.electron.onClear(()            => clearChat());
+}
+
+// ══════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════
+function setStatus(l, c) { badgeEl.textContent = l; badgeEl.className = 'badge' + (c ? ' ' + c : ''); }
+function scroll() { setTimeout(() => chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight, 60); }
+
+function addSysMsg(t) {
+  const el = document.createElement('div'); el.className = 'sys-msg'; el.textContent = t;
+  chatMessagesEl.appendChild(el); scroll();
+}
+function addUserMessage(t) {
+  const el = document.createElement('div'); el.className = 'msg';
+  el.innerHTML = `<div class="msg-meta"><div class="msg-role"><div class="role-dot" style="background:var(--accent2)"></div>YOU</div></div><div class="msg-body">${esc(t)}</div>`;
+  chatMessagesEl.appendChild(el); scroll();
+}
+function addTranscribedMessage(t, speaker) {
+  const label = speaker === 'INTERVIEWER' ? 'INTERVIEWER' : (speaker || 'HEARD');
+  const icon  = speaker === 'INTERVIEWER' ? '🎧' : '🎙';
+  const el = document.createElement('div'); el.className = 'msg';
+  el.innerHTML = `<div class="msg-meta"><div class="msg-role"><div class="role-dot" style="background:var(--green)"></div>${esc(label)}</div></div><div class="msg-body transcribed">${icon} ${esc(t)}</div>`;
+  chatMessagesEl.appendChild(el); scroll();
+}
+function addAIMessage(t, provider, model) {
+  const el = document.createElement('div'); el.className = 'msg';
+  const pt = provider ? `<span class="provider-tag">${esc(provider)}</span>` : '';
+  el.innerHTML = `<div class="msg-meta"><div class="msg-role"><div class="role-dot" style="background:var(--accent)"></div>AI ${pt}</div><button class="btn-copy">copy</button></div><div class="msg-body ai">${formatMd(t)}</div>`;
+  chatMessagesEl.appendChild(el);
+  // Scope the lookup to this message element — no global id, so no collisions when
+  // two AI messages are created in the same millisecond.
+  el.querySelector('.btn-copy').addEventListener('click', function() { copyText(this, t); });
+  scroll();
+}
+function addThinking() {
+  const el = document.createElement('div'); el.className = 'msg';
+  el.innerHTML = `<div class="msg-role" style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:5px"><div class="role-dot" style="background:var(--accent)"></div>AI</div><div class="thinking-wrap"><div class="dots"><span></span><span></span><span></span></div>Thinking...</div>`;
+  chatMessagesEl.appendChild(el); scroll(); return el;
+}
+function addScreenshotPreview(b) {
+  const el = document.createElement('div'); el.className = 'msg';
+  el.innerHTML = `<div class="msg-role" style="font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--muted2)">📸 SCREENSHOT</div><img class="screenshot-thumb" src="data:image/png;base64,${b}"/>`;
+  chatMessagesEl.appendChild(el); scroll();
+}
+function addError(msg) {
+  const el = document.createElement('div'); el.className = 'err-msg'; el.textContent = '⚠ ' + msg;
+  chatMessagesEl.appendChild(el); scroll();
+}
+function clearChat() { chatMessagesEl.innerHTML = ''; messages = []; addSysMsg('Chat cleared.'); }
+
+let listenBarEl = null;
+function showListenBar() {
+  if (listenBarEl) return;
+  listenBarEl = document.createElement('div'); listenBarEl.className = 'listen-bar'; listenBarEl.id = 'listenBar';
+  listenBarEl.innerHTML = `<div class="listen-wave"><span></span><span></span><span></span><span></span><span></span></div>Listening with Whisper... (Ctrl+Shift+L to stop)`;
+  chatMessagesEl.prepend(listenBarEl);
+}
+function removeListenBar() { document.getElementById('listenBar')?.remove(); listenBarEl = null; }
+
+// Recording bar in the chat while a question is being recorded (Ctrl+Shift+L / red button).
+let recBarEl = null;
+function showRecBar() {
+  if (!recBarEl || !recBarEl.isConnected) {
+    recBarEl = document.createElement('div'); recBarEl.className = 'listen-bar rec-bar';
+    recBarEl.innerHTML = `<div class="listen-wave"><span></span><span></span><span></span><span></span><span></span></div><span class="rec-text"></span>`;
+    chatMessagesEl.appendChild(recBarEl); scroll();
+  }
+  recBarEl.querySelector('.rec-text').textContent =
+    `🔴 Recording question ${formatDuration(Date.now() - manualStartTime)} · Ctrl+Shift+L — stop & answer`;
+}
+function removeRecBar() { recBarEl?.remove(); recBarEl = null; }
+function updateListenStatus(active) {
+  const el = document.getElementById('listenStatus');
+  if (el) el.textContent = active ? '🔴 Recording — speaks → pauses → Whisper transcribes → AI answers' : 'Press Ctrl+Shift+L to start listening';
+}
+function addTranscriptLog(t) {
+  const log = document.getElementById('transcriptLog');
+  if (!log) return;
+  const p = log.querySelector('span');
+  if (p) p.remove();
+  const el = document.createElement('div');
+  el.textContent = `[${new Date().toLocaleTimeString()}] ${t}`;
+  log.appendChild(el); log.scrollTop = log.scrollHeight;
+}
+
+function formatMd(t) {
+  let h = esc(t);
+  h = h.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><code>${c.trim()}</code></pre>`);
+  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/^#{1,3} (.+)$/gm, '<strong style="display:block;margin-top:8px;color:var(--accent)">$1</strong>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+function esc(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function copyText(btn, t) {
+  navigator.clipboard.writeText(t).then(() => {
+    const o = btn.textContent; btn.textContent = 'copied!'; btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = o; btn.style.color = ''; }, 1500);
+  });
+}
+
+// Input events
+btnSend.addEventListener('click', () => {
+  const t = userInput.value.trim(); if (!t) return;
+  userInput.value = ''; userInput.style.height = 'auto';
+  sendFollowUp(t);
+});
+userInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); btnSend.click(); } });
+userInput.addEventListener('input', () => { userInput.style.height = 'auto'; userInput.style.height = userInput.scrollHeight + 'px'; });
+btnClear.addEventListener('click', () => clearChat());
+
+// Manual record + Ollama test wiring
+document.getElementById('btnManualRecord')?.addEventListener('click', toggleManualRecord);
+document.getElementById('btnTestOllama')?.addEventListener('click', testOllama);
+// ESC stops manual recording
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && manualRecording) {
+    e.preventDefault();
+    stopManualRecording();
+  }
+});
+</script>
+</body>
+</html>
