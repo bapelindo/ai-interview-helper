@@ -15,7 +15,7 @@
 ![AI providers](https://img.shields.io/badge/AI%20providers-7-00d4ff)
 [![GitHub stars](https://img.shields.io/github/stars/pyk-boo/ai-interview-helper?style=flat&color=ffd166)](https://github.com/pyk-boo/ai-interview-helper/stargazers)
 
-[**Quick start**](#-quick-start) · [**Features**](#-features) · [**Why free?**](#-free-vs-paid-interview-copilots) · [**FAQ**](#-faq)
+[**Quick start**](#-quick-start) · [**Features**](#-features) · [**Why free?**](#-free-vs-paid-interview-copilots) · [**FAQ**](#-faq) · [**☕ Support**](#-support-the-project)
 
 </div>
 
@@ -168,6 +168,30 @@ This project is intended for learning and interview preparation (mock interviews
 ## 📄 License
 
 Distributed under the [MIT License](LICENSE).
+
+## ☕ Support the project
+
+AI Interview Helper is free. No subscriptions, no paywalls, no "upgrade to Pro to see the answer".
+
+But let's be honest: I'm saving up for a **Porsche 911**. 🏎️
+
+```
+Porsche 911 fund  [▱▱▱▱▱▱▱▱▱▱]  0.0001%
+                  current status: can afford the keychain
+```
+
+If this app helped you pass an interview or land an offer, toss a few coins into the tank.
+Every donation gets me one bolt closer, and you'll be officially part of the build. 🔧
+
+| Coin | Network | Address |
+|---|---|---|
+| ₿ **BTC** | Bitcoin | `bc1qdy7qumc4a0jqzv6tru76vvexc8z78gw4u9kua9` |
+| 💵 **USDT** | TRC-20 (Tron) | `TCxhhwjNKkgsmkVEjthqk5MxY4R8JwPcso` |
+| ⟠ **ETH** | Ethereum (ERC-20) | `0x8BE40eD0978eb41c3272d3a97147E9e141F9ce9E` |
+
+> ⚠️ Double-check the network before sending. Coins sent on the wrong network don't buy anyone a Porsche.
+
+**No crypto? No problem.** A ⭐ on GitHub also counts as fuel. So do bug reports, pull requests and telling a friend who's job hunting. Thank you! 🙏
 
 <div align="center">
 
