@@ -32,7 +32,7 @@
 |---|:-:|:-:|
 | Price | ✅ **$0, forever** | 💳 Monthly subscription |
 | Account / sign-up | ✅ Not needed | Required |
-| Source code | ✅ Open (MIT) | Closed |
+| Source code | ✅ Open (MIT) | Usually closed |
 | Choice of AI model | ✅ 7 providers + any local model | Fixed by the vendor |
 | Works offline | ✅ With Ollama | ❌ |
 | Where your data goes | ✅ Straight to the AI provider you pick | Through the vendor's servers |
@@ -181,6 +181,8 @@ Issues and pull requests are welcome: new AI providers, UI ideas, bug fixes, tra
 ## ⚠️ Disclaimer
 
 This project is intended for learning and interview preparation (mock interviews, practicing answers). Using it during real interviews may violate the rules of the company or platform. That responsibility lies with the user.
+
+Cluely, Interview Coder, Final Round AI and LockedIn AI are trademarks of their respective owners. This project is not affiliated with, endorsed by or sponsored by any of them.
 
 ## 📄 License
 
