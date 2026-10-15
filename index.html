@@ -857,7 +857,9 @@ async function runAIExchange(opts = {}) {
 }
 
 async function askAI(msgs) {
-  const trimmed = msgs.slice(-6); // keep a bit more context for follow-ups
+  // Keep a bit more context for follow-ups. Drop empty turns: every provider rejects a
+  // message without text with a 400, and one bad turn would break the whole chat.
+  const trimmed = msgs.slice(-6).filter(m => m._image || (typeof m.content === 'string' && m.content.trim()));
   const errors = [];
 
   // If the request includes a screenshot, prefer vision-capable providers so the
@@ -882,6 +884,9 @@ async function askAI(msgs) {
         model = getModel(provider);
         result = await callProvider(provider, key, model, trimmed);
       }
+      // A blank answer (e.g. a reasoning model that used its whole budget thinking) must not
+      // reach the chat history — treat it as a failure and try the next provider.
+      if (typeof result !== 'string' || !result.trim()) throw new Error('empty response');
       return { text: result, provider, model };
     } catch(err) {
       const msg = err.message || '';
@@ -949,10 +954,17 @@ async function callAnthropic(key, model, msgs) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({ model, max_tokens: 1200, system: buildSystemPrompt(), messages: apiMsgs })
+    // Newer Claude models think before answering and thinking counts toward max_tokens,
+    // so leave room for both — 1200 could be spent entirely on thinking.
+    body: JSON.stringify({ model, max_tokens: 8000, system: buildSystemPrompt(), messages: apiMsgs })
   });
   if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(`${res.status}: ${e.error?.message || res.statusText}`); }
-  return (await res.json()).content[0].text;
+  const d = await res.json();
+  if (d.stop_reason === 'refusal') throw new Error('Anthropic: request declined');
+  // content[0] is a 'thinking' block on Sonnet 5.5 / Opus 5.5 — collect the text blocks instead.
+  const text = (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  if (!text) throw new Error(`Anthropic: empty response (${d.stop_reason || 'unknown'})`);
+  return text;
 }
 
 async function callGemini(key, model, msgs) {
