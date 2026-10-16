@@ -24,7 +24,7 @@
 
 ---
 
-**AI Interview Helper** is a desktop AI copilot for technical interviews. It listens to the interviewer's question, transcribes it with Whisper, and shows a ready answer in seconds. Press one hotkey and it reads your screen to solve a coding task (LeetCode, HackerRank, live coding), a system design diagram or a quiz. It works with **Groq, Claude, Gemini, ChatGPT, DeepSeek, GLM** or a **local Ollama model**, so you choose the AI and you never pay a subscription.
+**AI Interview Helper** is a desktop AI copilot for technical interviews. It listens to the interviewer's question, transcribes it with Whisper, and shows a ready answer in seconds. Press one hotkey and it reads your screen to solve a coding task (LeetCode, HackerRank, live coding), a system design diagram or a quiz. It works with **Groq, Claude, Gemini, ChatGPT, DeepSeek, GLM**, **9Router AI Gateway**, or a **local Ollama model**, so you choose the AI and you never pay a subscription.
 
 ## 💸 Free vs paid interview copilots
 
@@ -33,11 +33,11 @@
 | Price | ✅ **$0, forever** | 💳 Monthly subscription |
 | Account / sign-up | ✅ Not needed | Required |
 | Source code | ✅ Open (MIT) | Usually closed |
-| Choice of AI model | ✅ 7 providers + any local model | Fixed by the vendor |
-| Works offline | ✅ With Ollama | ❌ |
+| Choice of AI model | ✅ 7 providers + 9Router & local models | Fixed by the vendor |
+| Works offline | ✅ With Ollama / local gateway | ❌ |
 | Where your data goes | ✅ Straight to the AI provider you pick | Through the vendor's servers |
 
-> **How is it free?** The app itself costs nothing. For the AI part you either use a free-tier API key (Groq, Gemini and Z.ai all have one) or run a model locally with Ollama. No middleman, no markup.
+> **How is it free?** The app itself costs nothing. For the AI part you either use a free-tier API key (Groq, Gemini and Z.ai all have one), route via **9Router**, or run a model locally with Ollama. No middleman, no markup.
 
 ## ✨ Features
 
@@ -46,7 +46,7 @@
 | 🎙 **Voice → answer** | Real-time speech-to-text (Whisper via Groq / OpenAI, or Gemini). Answers automatically when the interviewer stops talking |
 | 🖼 **Screenshot → solution** | One hotkey sends your screen to a vision model: coding problems, SQL, diagrams, multiple-choice tests |
 | 🗣 **Speaker separation** | Tells the interviewer (system audio) apart from your mic and only answers the interviewer |
-| 🔀 **7 AI providers** | Groq, Anthropic Claude, Google Gemini, OpenAI GPT, DeepSeek, Z.ai GLM, local Ollama, with automatic fallback when one hits a rate limit |
+| 🔀 **8 AI routing modes** | Groq, Anthropic Claude, Google Gemini, OpenAI GPT, DeepSeek, Z.ai GLM, 9Router Gateway, and local Ollama |
 | 👤 **Personalized answers** | Paste your resume and target role. Answers come in first person, based on your real experience |
 | 🌐 **Multilingual** | Replies in the language of the question: English, Spanish, Russian and many more |
 | 🪟 **Always-on-top overlay** | Transparent side panel, compact mode, hide/show with one hotkey |
@@ -100,9 +100,27 @@ On macOS use <kbd>⌘ Cmd</kbd> instead of <kbd>Ctrl</kbd>.
 | **OpenAI** | GPT-4o, GPT-4o mini | ✅ | ✅ Whisper | — |
 | **DeepSeek** | Chat, Reasoner | — | — | — |
 | **Z.ai** | GLM-4.5 Flash / Air, GLM-4.5, GLM-4.6 | ✅* | — | ✅ |
-| **Ollama** | any local model (Llama, Qwen, Mistral…) | ✅* | — | ✅ offline |
+| **9Router Gateway** ⭐ | Multi-tier routed models (`ag/gemini-3.8-flash-high`, `ag/claude-sonnet-4-6`, etc.) | ✅ | — | ✅ local gateway |
+| **Ollama** | Any local model (Llama 3.1, Qwen 2.5, Mistral…) | ✅* | — | ✅ offline |
 
 <sub>* depends on the selected model</sub>
+
+## 🔀 9Router & Ollama Gateway
+
+AI Interview Helper features seamless, production-ready integration with **[9Router](https://9router.com)** (by `decolua`) and **Ollama**:
+
+### Why use 9Router?
+- **3-Tier Smart Auto-Fallback:** Transparently routes between your subscription accounts, secondary low-cost APIs, and local models to completely eliminate rate limit downtime (`429`).
+- **Real-Time Token Compression (RTK):** Optimizes prompts to save tokens and reduce latency during live interview rounds.
+- **Unified Local Endpoint:** Connects to `http://localhost:20128/v1` with your 9Router API key.
+- **Full Multimodal Vision:** Screenshots taken with <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> are parsed and sent directly with vision support.
+
+### Setup Instructions:
+1. Ensure 9Router is running on your machine (default port: `20128`).
+2. Open Settings in the app and click the **⚡ 9Router (20128)** preset button.
+3. Paste your API key generated from the [9Router Dashboard](http://localhost:20128/dashboard).
+4. Click **🔄 Fetch** to automatically list all active models (e.g. `ag/gemini-3.8-flash-high`).
+5. Click **🔌 Test 9Router / Ollama Connection** to verify round-trip latency and model readiness.
 
 ## 🎧 Capturing the interviewer's audio (Zoom, Google Meet, Teams)
 

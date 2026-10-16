@@ -1,7 +1,7 @@
 {
   "name": "ai-interview-helper",
   "version": "2.0.1",
-  "description": "Free, open-source AI interview assistant: real-time answers from voice transcription and screenshots. Works with Groq, Claude, Gemini, OpenAI, DeepSeek, Z.ai and local Ollama.",
+  "description": "Free, open-source AI interview assistant: real-time answers from voice transcription and screenshots. Works with Groq, Claude, Gemini, OpenAI, DeepSeek, Z.ai, 9Router and local Ollama.",
   "keywords": [
     "ai interview assistant",
     "interview helper",
@@ -17,6 +17,7 @@
     "claude",
     "gemini",
     "openai",
+    "9router",
     "ollama"
   ],
   "homepage": "https://github.com/pyk-boo/ai-interview-helper#readme",
@@ -51,7 +52,8 @@
       "main.js",
       "preload.js",
       "index.html",
-      "package.json"
+      "package.json",
+      "build/**"
     ],
     "publish": null,
     "win": {
