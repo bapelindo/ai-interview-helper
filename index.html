@@ -160,6 +160,13 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
 .vol-meter{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;border:1px solid var(--border)}
 .vol-bar{height:100%;width:0%;background:var(--green);transition:width 0.1s;border-radius:2px}
 #transcriptLog{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted2);font-family:var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;min-height:60px}
+
+.dot-9router{background:#00d4ff}
+.header-lang-badge{width:auto !important;min-width:32px;padding:0 7px !important;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);border:1px solid var(--border2);background:var(--surface2)}
+.header-lang-badge:hover{border-color:var(--accent)}
+.btn-preset{border:none;outline:none;transition:all 0.15s;font-family:var(--sans)}
+.btn-preset:hover{filter:brightness(1.2)}
+
 </style>
 </head>
 <body>
@@ -170,8 +177,12 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
   <div class="logo"><div class="logo-ring"></div>AI INTERVIEW HELPER <span style="color:var(--muted);font-size:10px;margin-left:2px">v3</span></div>
   <div class="header-right">
     <span id="providerIndicator" style="font-family:var(--mono);font-size:9px;color:var(--muted);display:none"></span>
+    <button class="btn-icon header-lang-badge" id="btnLiveSpeechLang" title="Bahasa Mikrofon (Klik untuk ganti: ID 🇮🇩 / EN 🇺🇸 / Auto 🌐)">🇮🇩 ID</button>
     <span class="badge" id="badge">READY</span>
-    <button class="btn-icon active" id="btnToggleSettings" title="Toggle Settings">⚙</button>
+    <button class="btn-icon" id="btnToggleWinMode" title="Mode Layar (Penuh / Ringkas)">🗖</button>
+    <button class="btn-icon" id="btnHideWindow" title="Sembunyikan Window (Ctrl+Shift+H)">👁️</button>
+    <button class="btn-icon active" id="btnToggleSettings" title="Buka / Tutup Pengaturan (⚙)">⚙</button>
+    <button class="btn-icon" id="btnCloseApp" title="Tutup Aplikasi" style="color:var(--red)">✕</button>
   </div>
 </div>
 
@@ -184,8 +195,24 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
 <!-- ══ CHAT PANE ══ -->
 <div id="chatPane">
   <div id="settingsPanel">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:6px;border-bottom:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:6px">
+        <span>⚙ Pengaturan Sistem &amp; AI Provider</span>
+      </div>
+      <button class="btn-icon" id="btnCloseSettings" title="Tutup Pengaturan" style="width:22px;height:22px;font-size:10px">✕</button>
+    </div>
     <div class="section-label">AI Providers</div>
     <div class="api-grid">
+      <!-- 9Router Gateway — PRIMARY recommended -->
+      <div class="api-row">
+        <span class="api-label"><span class="provider-dot dot-9router"></span>9Router ⭐</span>
+        <div class="key-wrap"><input type="password" id="keyRouter9" placeholder="sk-..." oninput="updateKeyStatus('router9',this.value)"/><span class="key-status inactive" id="ks-router9"></span></div>
+        <select id="modelRouter9">
+          <option value="ag/gemini-3.8-flash-high" selected>Gemini 3.8 Flash High ⚡</option>
+          <option value="gemini/gemini-2.5-flash">Gemini 2.5 Flash</option>
+          <option value="openai/gpt-4o">GPT-4o 🧠</option>
+        </select>
+      </div>
       <!-- Groq — PRIMARY recommended -->
       <div class="api-row">
         <span class="api-label"><span class="provider-dot dot-groq"></span>Groq ⭐</span>
@@ -211,9 +238,9 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
         <span class="api-label"><span class="provider-dot dot-gemini"></span>Gemini <span style="color:var(--green);font-size:8px">FREE</span></span>
         <div class="key-wrap"><input type="password" id="keyGemini" placeholder="AIza..." oninput="updateKeyStatus('gemini',this.value)"/><span class="key-status inactive" id="ks-gemini"></span></div>
         <select id="modelGemini">
-          <option value="gemini-flash-latest">Flash (latest) ⚡</option>
-          <option value="gemini-2.5-flash">2.5 Flash</option>
-          <option value="gemini-flash-lite-latest">Flash-Lite (fastest) FREE</option>
+          <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash ⚡</option>
+          <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+          <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
         </select>
       </div>
       <!-- OpenAI -->
@@ -248,16 +275,20 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
     </div>
 
     <div class="field" style="margin-top:4px">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <input type="checkbox" id="ollamaEnabled" style="width:auto" onchange="config.ollamaEnabled=this.checked;saveConfig();renderPriorityList();updateProviderIndicator()"/>
-        Ollama <span class="provider-dot dot-ollama"></span> (local — no internet, no limits, free)
-      </label>
-      <input type="text" id="ollamaModel" placeholder="llama3.1:8b" style="margin-top:4px"/>
-      <input type="text" id="ollamaUrl" placeholder="http://localhost:11434" style="margin-top:4px"/>
-      <button class="btn-test" id="btnTestOllama" style="width:100%;margin-top:4px">🔌 Test Ollama connection</button>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" id="ollamaEnabled" style="width:auto" onchange="config.ollamaEnabled=this.checked;saveConfig();renderPriorityList();updateProviderIndicator()"/>
+          Ollama / 9Router Gateway <span class="provider-dot dot-ollama"></span> (Local / Proxy)
+        </label>
+        <button class="btn-preset" id="btnPreset9Router" type="button" style="font-size:9px;padding:2px 7px;background:rgba(0,212,255,0.12);color:var(--accent);border:1px solid var(--accent);border-radius:4px;cursor:pointer;-webkit-app-region:no-drag">⚡ 9Router Preset</button>
+      </div>
+      <input type="text" id="ollamaModel" placeholder="ag/gemini-3.8-flash-high atau llama3.1:8b" style="margin-top:4px"/>
+      <input type="text" id="ollamaUrl" placeholder="http://127.0.0.1:20128 atau http://localhost:11434" style="margin-top:4px"/>
+      <input type="password" id="ollamaKey" placeholder="API Key jika menggunakan 9Router (sk-...)" style="margin-top:4px"/>
+      <button class="btn-test" id="btnTestOllama" style="width:100%;margin-top:4px">🔌 Test Connection</button>
       <div id="ollamaTestResult" style="font-family:var(--mono);font-size:10px;margin-top:4px;color:var(--muted2);min-height:12px;word-break:break-word"></div>
       <div style="font-size:10px;color:var(--muted2);margin-top:4px">
-        Install <span style="color:var(--accent)">ollama.com</span>, then <code style="font-size:9px">ollama pull llama3.1:8b</code>. Can be primary or fallback.
+        Dapat menggunakan Ollama lokal (<span style="color:var(--accent)">localhost:11434</span>) atau 9Router gateway (<span style="color:var(--accent)">127.0.0.1:20128</span>).
       </div>
     </div>
 
@@ -280,7 +311,14 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
       <label>AI Instructions (micro-prompt)</label>
       <textarea id="customPrompt" style="min-height:72px" placeholder="e.g. Answer naturally, like a confident human. Keep answers concise unless it's a coding question."></textarea>
     </div>
-    <button class="btn-primary" id="btnSaveSettings">✓ Save &amp; Start Session</button>
+    <div class="field" style="margin-top:6px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px">
+        <input type="checkbox" id="chkContentProtection" style="width:auto" onchange="toggleContentProtection(this.checked)"/>
+        🛡️ Proteksi Anti-Tangkapan Layar (Zoom, Teams, Meet)
+      </label>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">Jika layar terlihat blank hitam di software streaming/capture, nonaktifkan proteksi ini.</div>
+    </div>
+    <button class="btn-primary" id="btnSaveSettings">✓ Simpan Pengaturan &amp; Mulai Wawancara</button>
     
     <div class="hotkeys-grid">
       <div class="hk"><span>Screenshot</span><kbd>⌃⇧Space</kbd></div>
@@ -292,6 +330,10 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
     <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center">🛡 INVISIBLE to screen sharing</div>
   </div>
 
+  <div id="settingsBanner" style="display:none;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);text-align:center">
+    <span style="font-size:11px;color:var(--muted2);margin-right:8px">Pengaturan disembunyikan.</span>
+    <button id="btnOpenSettingsBanner" style="font-size:10px;padding:3px 8px;background:rgba(0,212,255,0.15);color:var(--accent);border:1px solid var(--accent);border-radius:4px;cursor:pointer;-webkit-app-region:no-drag">⚙ Buka Pengaturan</button>
+  </div>
   <div id="chatMessages"></div>
 
   <div class="chat-input-bar">
@@ -303,6 +345,48 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
 
 <!-- ══ AUDIO PANE ══ -->
 <div id="audioPane" class="hidden">
+
+  <!-- Voice Transcriber Engine Selection -->
+  <div class="section-label">Mesin Transkripsi Suara (Voice Transcriber Engine) 🎙️</div>
+  <div class="field" style="margin-bottom:8px">
+    <select id="transcriberEngine" onchange="config.transcriberEngine=this.value;saveConfig();updateTranscriberUI();">
+      <option value="auto" selected>Auto-Fallback (Gemini → 9Router → Groq → OpenAI) 🔄</option>
+      <option value="gemini">Google Gemini Cloud Direct (Key Gemini di Tab Chat) ⚡</option>
+      <option value="9router">9Router Gemini 2.5 Flash STT (Local 127.0.0.1:20128) ⭐</option>
+      <option value="groq">Groq Whisper (console.groq.com - Rekomendasi Tercepat 0.3s) 🚀</option>
+      <option value="openai">OpenAI Whisper (whisper-1)</option>
+    </select>
+  </div>
+
+  <div style="display:flex;gap:6px;margin-bottom:8px">
+    <button class="btn-test" id="btnTestMicLive" style="flex:1;background:rgba(0,229,160,0.15);color:var(--green);border-color:var(--green)">🎤 Tes Bicara 3 Detik (Mic Nyata)</button>
+    <button class="btn-test" id="btnTest9RouterAudio" style="flex:1">🔌 Tes Koneksi Server</button>
+  </div>
+  <div id="result9RouterAudio" style="font-family:var(--mono);font-size:10px;margin-bottom:8px;color:var(--muted2);min-height:14px;word-break:break-word"></div>
+
+  <!-- 9Router Whisper Gateway Config Box -->
+  <div id="box9RouterAudio">
+    <div class="section-label" style="font-size:10px;color:var(--muted2)">Konfigurasi 9Router STT</div>
+    <div class="api-grid" style="margin-bottom:8px">
+      <div class="api-row api-row-2col">
+        <span class="api-label"><span class="provider-dot dot-9router"></span>9Router URL</span>
+        <input type="text" id="url9RouterAudio" placeholder="http://127.0.0.1:20128/v1/audio/transcriptions" value="http://127.0.0.1:20128/v1/audio/transcriptions"/>
+      </div>
+      <div class="api-row api-row-2col">
+        <span class="api-label"><span class="provider-dot dot-9router"></span>API Key</span>
+        <div class="key-wrap">
+          <input type="password" id="key9RouterAudio" placeholder="sk-..." oninput="updateKeyStatus('9router-audio',this.value)"/>
+          <span class="key-status inactive" id="ks-9router-audio"></span>
+        </div>
+      </div>
+      <div class="api-row api-row-2col">
+        <span class="api-label"><span class="provider-dot dot-9router"></span>Model</span>
+        <input type="text" id="model9RouterAudio" placeholder="gemini/gemini-2.5-flash" value="gemini/gemini-2.5-flash"/>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
 
   <div class="section-label">Groq API Key (Whisper + LLM)</div>
   <div class="api-row api-row-2col">
@@ -370,7 +454,8 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
     <div class="field">
       <label>Language</label>
       <select id="whisperLang">
-        <option value="" selected>Auto-detect 🌐</option>
+        <option value="">Auto-detect 🌐</option>
+        <option value="id" selected>Bahasa Indonesia 🇮🇩</option>
         <option value="en">English 🇺🇸</option>
         <option value="ru">Russian 🇷🇺</option>
         <option value="uk">Ukrainian 🇺🇦</option>
@@ -404,15 +489,21 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
 //  CONFIG & STATE
 // ══════════════════════════════════════════════
 let config = {
+  keyRouter9:'',
+  modelRouter9:'ag/gemini-3.8-flash-high',
+  urlRouter9:'http://127.0.0.1:20128',
+  url9RouterAudio:'http://127.0.0.1:20128/v1/audio/transcriptions',
+  key9RouterAudio:'',
+  model9RouterAudio:'gemini/gemini-2.5-flash',
   keyGroq:'', keyAnthropic:'', keyGemini:'', keyOpenAI:'', keyDeepseek:'', keyZai:'',
   modelGroq:'openai/gpt-oss-20b',
   modelAnthropic:'claude-sonnet-5-5',
-  modelGemini:'gemini-flash-latest',
+  modelGemini:'gemini-2.5-flash',
   modelOpenAI:'gpt-4o-mini',
   modelDeepseek:'deepseek-chat',
   modelZai:'glm-4.5-flash',
-  primaryProvider:'gemini',
-  providerOrder:[],
+  primaryProvider:'router9',
+  providerOrder:['router9','gemini','groq','ollama'],
   position:'', resume:'', customPrompt:'',
   audioDeviceId:'',
   diarize: false,
@@ -420,19 +511,21 @@ let config = {
   myMicDeviceId:'',
   settingsOpen: true,
   silenceThresh: 1800,
-  whisperLang: '',
-  ollamaEnabled: false,
-  ollamaModel: 'llama3.1:8b',
-  ollamaUrl: 'http://localhost:11434'
+  whisperLang: 'id',
+  ollamaEnabled: true,
+  ollamaModel: 'ag/gemini-3.8-flash-high',
+  ollamaUrl: 'http://127.0.0.1:20128',
+  ollamaKey: '',
+  screenProtection: false,
+  transcriberEngine: 'auto'
 };
 
-const ALL_PROVIDERS = ['groq','anthropic','gemini','openai','deepseek','zai'];
-const ORDERABLE_PROVIDERS = ['groq','anthropic','gemini','openai','deepseek','zai','ollama'];
-const PROVIDER_NAMES = {groq:'Groq',anthropic:'Anthropic',gemini:'Gemini',openai:'OpenAI',deepseek:'DeepSeek',zai:'Z.ai',ollama:'Ollama'};
-const PROVIDER_DOTS  = {groq:'dot-groq',anthropic:'dot-anthropic',gemini:'dot-gemini',openai:'dot-openai',deepseek:'dot-deepseek',zai:'dot-zai',ollama:'dot-ollama'};
-// Config/DOM suffix per provider. NOTE: openai -> 'OpenAI' (not 'Openai'); a naive
-// capitalize produced 'keyOpenai'/'modelOpenai' and silently broke the OpenAI provider.
-const CFG_SUFFIX = {groq:'Groq',anthropic:'Anthropic',gemini:'Gemini',openai:'OpenAI',deepseek:'Deepseek',zai:'Zai'};
+const ALL_PROVIDERS = ['gemini','router9','groq','anthropic','openai','deepseek','zai'];
+const ORDERABLE_PROVIDERS = ['gemini','router9','groq','anthropic','openai','deepseek','zai','ollama'];
+const PROVIDER_NAMES = {router9:'9Router',groq:'Groq',anthropic:'Anthropic',gemini:'Gemini',openai:'OpenAI',deepseek:'DeepSeek',zai:'Z.ai',ollama:'Ollama'};
+const PROVIDER_DOTS  = {router9:'dot-9router',groq:'dot-groq',anthropic:'dot-anthropic',gemini:'dot-gemini',openai:'dot-openai',deepseek:'dot-deepseek',zai:'dot-zai',ollama:'dot-ollama'};
+// Config/DOM suffix per provider.
+const CFG_SUFFIX = {router9:'Router9',groq:'Groq',anthropic:'Anthropic',gemini:'Gemini',openai:'OpenAI',deepseek:'Deepseek',zai:'Zai'};
 function cfgKey(p)   { return 'key'   + (CFG_SUFFIX[p] || (p[0].toUpperCase() + p.slice(1))); }
 function cfgModel(p) { return 'model' + (CFG_SUFFIX[p] || (p[0].toUpperCase() + p.slice(1))); }
 
@@ -496,9 +589,10 @@ try {
   }
   normalizeProviderOrder();
 
-  const fields = ['keyGroq','keyAnthropic','keyGemini','keyOpenAI','keyDeepseek','keyZai',
+  const fields = ['keyRouter9','modelRouter9','keyGroq','keyAnthropic','keyGemini','keyOpenAI','keyDeepseek','keyZai',
     'modelGroq','modelAnthropic','modelGemini','modelOpenAI','modelDeepseek','modelZai',
-    'position','resume','customPrompt','silenceThresh','whisperLang','ollamaModel','ollamaUrl'];
+    'position','resume','customPrompt','silenceThresh','whisperLang','ollamaModel','ollamaUrl','ollamaKey',
+    'url9RouterAudio','key9RouterAudio','model9RouterAudio','transcriberEngine'];
   fields.forEach(id => {
     const el = document.getElementById(id);
     if (el && config[id] !== undefined) el.value = config[id];
@@ -527,7 +621,14 @@ try {
   renderPriorityList();
 
   // Settings: always open on startup so user always sees their keys
-  // User can collapse manually with ⚙ button
+  settingsPanelEl.classList.remove('collapsed');
+  btnToggleSet.classList.add('active');
+  const sbInit = document.getElementById('settingsBanner');
+  if (sbInit) sbInit.style.display = 'none';
+  updateLiveLangUI(config.whisperLang || 'id');
+  const chkProt = document.getElementById('chkContentProtection');
+  if (chkProt) chkProt.checked = !!config.screenProtection;
+  applyWindowMode('full');
 } catch(e) {}
 
 // Ensure the priority list renders even if the init try/catch above bailed early.
@@ -537,10 +638,123 @@ if (!document.getElementById('providerPriority')?.children.length) {
 }
 
 loadAudioDevices();
+updateTranscriberUI();
+
+
+  // Safe helper
+  function safeClick(id, fn) {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', fn);
+  }
+
+  // Live Speech Language Toggle: id -> en -> auto
+  const btnLiveLang = document.getElementById('btnLiveSpeechLang');
+  const langSel = document.getElementById('whisperLang');
+  function updateLiveLangUI(lang) {
+    config.whisperLang = lang;
+    if (langSel) langSel.value = lang;
+    if (btnLiveLang) {
+      if (lang === 'id') btnLiveLang.textContent = '🇮🇩 ID';
+      else if (lang === 'en') btnLiveLang.textContent = '🇺🇸 EN';
+      else btnLiveLang.textContent = '🌐 Auto';
+    }
+    saveConfig();
+  }
+
+  if (btnLiveLang) {
+    btnLiveLang.addEventListener('click', () => {
+      const current = config.whisperLang;
+      if (current === 'id') updateLiveLangUI('en');
+      else if (current === 'en') updateLiveLangUI('');
+      else updateLiveLangUI('id');
+    });
+  }
+  if (langSel) {
+    langSel.addEventListener('change', () => updateLiveLangUI(langSel.value));
+  }
+
+  // Window Mode (Full vs Compact)
+  let isCompact = false;
+  safeClick('btnToggleWinMode', () => {
+    isCompact = !isCompact;
+    applyWindowMode(isCompact ? 'compact' : 'full');
+    const btn = document.getElementById('btnToggleWinMode');
+    if (btn) btn.textContent = isCompact ? '🗗' : '🗖';
+  });
+
+  // Hide Window
+  safeClick('btnHideWindow', () => {
+    if (window.electron && typeof window.electron.hideWindow === 'function') {
+      window.electron.hideWindow();
+    } else {
+      applyWindowMode('compact');
+    }
+  });
+
+  // Close App
+  safeClick('btnCloseApp', () => {
+    if (window.electron && typeof window.electron.closeApp === 'function') {
+      window.electron.closeApp();
+    }
+  });
+
+  // Close Settings
+  safeClick('btnCloseSettings', () => {
+    if (settingsPanelEl) settingsPanelEl.classList.add('collapsed');
+    if (btnToggleSet) btnToggleSet.classList.remove('active');
+    const sb = document.getElementById('settingsBanner');
+    if (sb) sb.style.display = 'block';
+    config.settingsOpen = false;
+    saveConfig();
+  });
+
+  // Open Settings Banner
+  safeClick('btnOpenSettingsBanner', () => {
+    if (settingsPanelEl) settingsPanelEl.classList.remove('collapsed');
+    if (btnToggleSet) btnToggleSet.classList.add('active');
+    const sb = document.getElementById('settingsBanner');
+    if (sb) sb.style.display = 'none';
+    config.settingsOpen = true;
+    saveConfig();
+    applyWindowMode('full');
+  });
+
+  // Preset 9Router in Ollama
+  safeClick('btnPreset9Router', () => {
+    const chk = document.getElementById('ollamaEnabled');
+    if (chk) chk.checked = true;
+    config.ollamaEnabled = true;
+    const m = document.getElementById('ollamaModel');
+    if (m) m.value = 'ag/gemini-3.8-flash-high';
+    config.ollamaModel = 'ag/gemini-3.8-flash-high';
+    const u = document.getElementById('ollamaUrl');
+    if (u) u.value = 'http://127.0.0.1:20128';
+    config.ollamaUrl = 'http://127.0.0.1:20128';
+    const k = document.getElementById('ollamaKey');
+    if (k && !k.value && config.keyRouter9) {
+      k.value = config.keyRouter9;
+      config.ollamaKey = config.keyRouter9;
+    }
+    saveConfig();
+    renderPriorityList();
+    updateProviderIndicator();
+    const res = document.getElementById('ollamaTestResult');
+    if (res) { res.style.color = 'var(--accent)'; res.textContent = '✓ 9Router preset applied!'; }
+  });
+
+  // Test 9Router & Mic Voice
+  safeClick('btnTest9RouterAudio', () => test9RouterAudio());
+  safeClick('btnTestMicLive', () => testMicVoiceTranscriber());
 
 // ══════════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════════
+function updateTranscriberUI() {
+  const eng = config.transcriberEngine || '9router';
+  const box9 = document.getElementById('box9RouterAudio');
+  if (box9) box9.style.display = (eng === '9router' || eng === 'auto') ? '' : 'none';
+}
+
 function updateKeyStatus(p, v) {
   const el = document.getElementById('ks-' + p);
   if (el) el.className = 'key-status ' + (v && v.trim().length > 6 ? 'active' : 'inactive');
@@ -566,7 +780,7 @@ function readFormToConfig() {
     const el = document.getElementById(cfgKey(p));
     if (el && el.value.trim()) config[cfgKey(p)] = el.value.trim();
   });
-  ['modelGroq','modelAnthropic','modelGemini','modelOpenAI','modelDeepseek','modelZai',
+  ['modelRouter9','modelGroq','modelAnthropic','modelGemini','modelOpenAI','modelDeepseek','modelZai',
    'position','resume','customPrompt'].forEach(id => {
     const el = document.getElementById(id);
     if (el && el.value !== undefined) config[id] = el.value.trim ? el.value.trim() : el.value;
@@ -591,6 +805,14 @@ function readFormToConfig() {
   if (om) config.ollamaModel = om.value.trim() || 'llama3.1:8b';
   const ou = document.getElementById('ollamaUrl');
   if (ou) config.ollamaUrl = ou.value.trim() || 'http://localhost:11434';
+  const teEl = document.getElementById('transcriberEngine');
+  if (teEl && teEl.value) config.transcriberEngine = teEl.value;
+  const u9 = document.getElementById('url9RouterAudio');
+  if (u9 && u9.value.trim()) config.url9RouterAudio = u9.value.trim();
+  const k9 = document.getElementById('key9RouterAudio');
+  if (k9 && k9.value.trim()) config.key9RouterAudio = k9.value.trim();
+  const m9 = document.getElementById('model9RouterAudio');
+  if (m9 && m9.value.trim()) config.model9RouterAudio = m9.value.trim();
 }
 
 // Render model chips. Click order = priority: first clicked is #1, then #2, #3…
@@ -668,9 +890,10 @@ btnToggleSet.addEventListener('click', () => {
   const collapsed = settingsPanelEl.classList.contains('collapsed');
   settingsPanelEl.classList.toggle('collapsed', !collapsed);
   btnToggleSet.classList.toggle('active', collapsed);
+  const sb = document.getElementById('settingsBanner');
+  if (sb) sb.style.display = collapsed ? 'none' : 'block';
   config.settingsOpen = collapsed;
   saveConfig();
-  // Opening settings restores the full panel window so everything is usable again.
   if (collapsed) applyWindowMode('full');
 });
 
@@ -678,6 +901,15 @@ btnToggleSet.addEventListener('click', () => {
 //  SAVE & START
 // ══════════════════════════════════════════════
 // Switch the Electron window between the full side-panel and the small compact square.
+
+function toggleContentProtection(enable) {
+  config.screenProtection = !!enable;
+  saveConfig();
+  if (window.electron && typeof window.electron.setContentProtection === 'function') {
+    window.electron.setContentProtection(config.screenProtection);
+  }
+}
+
 function applyWindowMode(mode) {
   document.body.classList.toggle('compact', mode === 'compact');
   if (window.electron && typeof window.electron.setWindowMode === 'function') {
@@ -694,6 +926,8 @@ btnSave.addEventListener('click', () => {
   renderPriorityList();
   settingsPanelEl.classList.add('collapsed');
   btnToggleSet.classList.remove('active');
+  const sb = document.getElementById('settingsBanner');
+  if (sb) sb.style.display = 'block';
   updateProviderIndicator();
   addSysMsg('✓ Session started · Screenshot: Ctrl+Shift+Space · Record question: Ctrl+Shift+L (start / stop)');
   setStatus('READY', '');
@@ -780,7 +1014,7 @@ function getProviderOrder() {
   // Only the providers the user clicked, in click order. Nothing picked → all, default order.
   const order = (Array.isArray(config.providerOrder) && config.providerOrder.length)
     ? [...config.providerOrder]
-    : ['gemini','groq','zai','anthropic','openai','deepseek','ollama'];
+    : ['gemini','router9','groq','zai','anthropic','openai','deepseek','ollama'];
   return order.filter(p => p !== 'ollama' || config.ollamaEnabled);
 }
 function getKey(p) {
@@ -793,7 +1027,7 @@ function getModel(p) {
 // Which providers can actually read an image (so screenshots aren't silently dropped).
 // Groq/Ollama depend on the selected model — gpt-oss / most Ollama models are text-only.
 function providerSupportsVision(p) {
-  if (p === 'anthropic' || p === 'gemini' || p === 'openai') return true;
+  if (p === 'router9' || p === 'anthropic' || p === 'gemini' || p === 'openai') return true;
   if (p === 'groq')   return /vision|llama-4|scout|maverick|llava/i.test(config.modelGroq || '');
   if (p === 'ollama') return /llava|vision|moondream|bakllava|minicpm|qwen2.*vl/i.test(config.ollamaModel || '');
   if (p === 'zai')    return /vision|4\.5v|^glm-4\.6/i.test(config.modelZai || '');
@@ -919,7 +1153,195 @@ async function callOllama(model, msgs) {
   throw new Error('Ollama: unexpected response — model installed? (ollama pull ' + model + ')');
 }
 
+
+// ══════════════════════════════════════════════
+//  9ROUTER WHISPER & LLM GATEWAY (PRODUCTION)
+// ══════════════════════════════════════════════
+async function transcribeWith9Router(audioBlob) {
+  const url = (config.url9RouterAudio || 'http://127.0.0.1:20128/v1/audio/transcriptions').trim();
+  const key = (config.key9RouterAudio || config.ollamaKey || config.keyRouter9 || '').trim();
+  const model = (config.model9RouterAudio || 'gemini/gemini-2.5-flash').trim();
+
+  const fd = new FormData();
+  const ext = audioBlob.type?.includes('wav') ? 'wav' : (audioBlob.type?.includes('webm') ? 'webm' : (audioBlob.type?.includes('mp4') ? 'mp4' : 'mp3'));
+  fd.append('file', audioBlob, `audio.${ext}`);
+  fd.append('model', model);
+  if (config.whisperLang) fd.append('language', config.whisperLang);
+  if (config.position) fd.append('prompt', `Interview for ${config.position}`);
+
+  const headers = {};
+  if (key) headers['Authorization'] = `Bearer ${key}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: headers,
+    body: fd,
+    signal: AbortSignal.timeout(15000)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.statusText);
+    throw new Error(`9Router Whisper ${res.status}: ${errText.slice(0, 150)}`);
+  }
+
+  const d = await res.json();
+  if (d && typeof d.text === 'string') {
+    let t = d.text.trim();
+    // Filter Gemini silence/prompt hallucinations
+    if (/^(please provide the speech|thank you\.?|you|hello\.?)$/i.test(t)) return '';
+    return t;
+  }
+  throw new Error('9Router Whisper: unexpected response format');
+}
+
+async function test9RouterAudio() {
+  const resEl = document.getElementById('result9RouterAudio');
+  if (resEl) { resEl.style.color = 'var(--yellow)'; resEl.textContent = '⏳ Menguji koneksi 9Router server (127.0.0.1:20128)...'; }
+  try {
+    const url = (config.url9RouterAudio || 'http://127.0.0.1:20128/v1/audio/transcriptions').trim();
+    const key = (config.key9RouterAudio || config.ollamaKey || config.keyRouter9 || '').trim();
+    const base = url.split('/v1/')[0] || 'http://127.0.0.1:20128';
+
+    const headers = {};
+    if (key) headers['Authorization'] = `Bearer ${key}`;
+
+    const pingRes = await fetch(base + '/v1/models', {
+      headers: headers,
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!pingRes.ok) {
+      throw new Error(`9Router status HTTP ${pingRes.status} (${pingRes.statusText})`);
+    }
+
+    if (resEl) {
+      resEl.style.color = 'var(--green)';
+      resEl.textContent = `✓ 9Router Server Online & Terhubung! Port 20128 aktif. Model: ${config.model9RouterAudio || 'gemini/gemini-2.5-flash'} siap digunakan.`;
+    }
+  } catch (err) {
+    if (resEl) {
+      resEl.style.color = 'var(--red)';
+      resEl.textContent = '✗ ' + err.message + ' (Pastikan 9Router sudah start di background)';
+    }
+  }
+}
+
+async function testMicVoiceTranscriber() {
+  const resEl = document.getElementById('result9RouterAudio');
+  if (resEl) {
+    resEl.style.color = 'var(--yellow)';
+    resEl.textContent = '🔴 Merekam suara mic Anda selama 3 detik... Silakan bicara sekarang!';
+  }
+
+  try {
+    const deviceId = config.diarize ? (config.interviewerDeviceId || config.audioDeviceId) : (document.getElementById('audioDeviceLive')?.value || config.audioDeviceId);
+    const constraints = deviceId ? { audio: { deviceId: { exact: deviceId } } } : { audio: true };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+    const chunks = [];
+    const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+    const rec = new MediaRecorder(stream, { mimeType: mime });
+    rec.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+    rec.start();
+
+    let sec = 3;
+    const timer = setInterval(() => {
+      sec--;
+      if (sec > 0 && resEl) {
+        resEl.textContent = `🔴 Merekam suara mic Anda (${sec} detik lagi)... Silakan bicara!`;
+      } else {
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    await new Promise(r => setTimeout(r, 3100));
+    rec.stop();
+    stream.getTracks().forEach(t => t.stop());
+
+    await new Promise(r => setTimeout(r, 150));
+    const audioBlob = new Blob(chunks, { type: mime });
+
+    if (resEl) {
+      resEl.style.color = 'var(--accent)';
+      resEl.textContent = '⏳ Mentranskripsikan suara Anda via Gemini / 9Router / Whisper...';
+    }
+
+    const transcript = await transcribeAudio(audioBlob);
+    if (resEl) {
+      if (transcript && transcript.trim()) {
+        resEl.style.color = 'var(--green)';
+        resEl.textContent = `✓ BERHASIL! Suara Anda terdeteksi: "${transcript}"`;
+      } else {
+        resEl.style.color = 'var(--yellow)';
+        resEl.textContent = `⚠️ Selesai, tetapi tidak ada kata yang terucap / suara hening. Coba lagi lebih dekat ke mic.`;
+      }
+    }
+  } catch (err) {
+    if (resEl) {
+      resEl.style.color = 'var(--red)';
+      resEl.textContent = `✗ Gagal tes mic: ${err.message}`;
+    }
+  }
+}
+
+async function callRouter9(key, model, msgs) {
+  let base = (config.urlRouter9 || 'http://127.0.0.1:20128').replace(/\/+$/, '');
+  const endpoint = base.includes('/chat/completions') ? base : (base + '/v1/chat/completions');
+
+  const apiMsgs = [{ role: 'system', content: buildSystemPrompt() },
+    ...msgs.map(m => m._image
+      ? { role: 'user', content: [{ type: 'image_url', image_url: { url: `data:image/png;base64,${m._image}` } }, { type: 'text', text: m.content }] }
+      : { role: m.role, content: m.content })];
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) headers['Authorization'] = `Bearer ${key}`;
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      model: model || 'ag/gemini-3.8-flash-high',
+      messages: apiMsgs,
+      stream: false,
+      max_tokens: 2500
+    }),
+    signal: AbortSignal.timeout(20000)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.statusText);
+    throw new Error(`9Router ${res.status}: ${errText.slice(0, 150)}`);
+  }
+
+  const raw = await res.text();
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.choices?.[0]?.message?.content) {
+      return parsed.choices[0].message.content;
+    }
+  } catch (_) {}
+
+  // Parse SSE if streamed
+  if (raw.includes('data:')) {
+    let collected = '';
+    for (const line of raw.split('\n')) {
+      const t = line.trim();
+      if (t.startsWith('data:') && !t.includes('[DONE]')) {
+        try {
+          const chunk = JSON.parse(t.slice(5).trim());
+          const delta = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.message?.content || '';
+          collected += delta;
+        } catch (_) {}
+      }
+    }
+    if (collected) return collected;
+  }
+
+  throw new Error('9Router: empty or invalid response');
+}
+
 async function callProvider(p, k, m, msgs) {
+  if (p === 'router9')   return callRouter9(k, m, msgs);
   if (p === 'groq')      return callGroq(k, m, msgs);
   if (p === 'anthropic') return callAnthropic(k, m, msgs);
   if (p === 'gemini')    return callGemini(k, m, msgs);
@@ -1086,53 +1508,93 @@ function blobToBase64(blob) {
 // Gemini multimodal — transcribe audio inline (free tier). Fallback when no Whisper key.
 async function transcribeWithGemini(audioBlob) {
   const key = config.keyGemini;
-  if (!key) throw new Error('Gemini key not set');
+  if (!key) throw new Error('Kunci API Gemini belum diisi (masukkan di Tab Chat → Gemini)');
   const b64 = await blobToBase64(audioBlob);
-  if (!b64) throw new Error('Gemini: empty audio');
-  const model = config.modelGemini || 'gemini-flash-latest';
+  if (!b64) throw new Error('Audio rekaman kosong');
+  let model = config.modelGemini || 'gemini-2.5-flash';
+  if (model.includes('gemini-flash-latest')) model = 'gemini-2.5-flash';
   const langHint = config.whisperLang ? ` The spoken language is "${config.whisperLang}".` : '';
+  const mimeType = audioBlob.type?.includes('wav') ? 'audio/wav' : (audioBlob.type?.includes('mp3') ? 'audio/mp3' : 'audio/webm');
+
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [
-        { inline_data: { mime_type: (audioBlob.type || 'audio/webm').split(';')[0], data: b64 } },
-        { text: `Transcribe this audio verbatim. Output ONLY the raw transcription text with no commentary, labels or quotation marks.${langHint}` }
+        { inline_data: { mime_type: mimeType, data: b64 } },
+        { text: `Transcribe this audio verbatim. If there is only silence, noise, or no clear human speech, return empty text. Output ONLY the raw transcribed words with no commentary, labels or quotes.${langHint}` }
       ] }],
       generationConfig: { maxOutputTokens: 500, temperature: 0 }
-    })
+    }),
+    signal: AbortSignal.timeout(15000)
   });
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
     throw new Error(`Gemini audio ${res.status}: ${e.error?.message || res.statusText}`);
   }
   const d = await res.json();
-  return d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  const text = d.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+  if (/^(please provide the speech|thank you\.?|you)$/i.test(text)) return '';
+  return text;
 }
 
 // True if any transcription-capable provider has a key.
 function canTranscribe() {
-  return !!(config.keyGroq || config.keyOpenAI || config.keyGemini);
+  const eng = config.transcriberEngine || 'auto';
+  if (eng === 'gemini')  return !!config.keyGemini;
+  if (eng === '9router') return !!(config.key9RouterAudio || config.url9RouterAudio);
+  if (eng === 'groq')    return !!config.keyGroq;
+  if (eng === 'openai')  return !!config.keyOpenAI;
+  return !!(config.keyGemini || config.key9RouterAudio || config.url9RouterAudio || config.keyGroq || config.keyOpenAI);
 }
 
-// Try every available transcription provider in turn (Groq Whisper → OpenAI Whisper → Gemini).
+// Try every available transcription provider according to selected engine
 async function transcribeAudio(audioBlob) {
   const attempts = [];
-  if (config.keyGroq)   attempts.push(['Groq Whisper',   () => transcribeWithGroq(audioBlob)]);
-  if (config.keyOpenAI) attempts.push(['OpenAI Whisper', () => transcribeWithOpenAI(audioBlob)]);
-  if (config.keyGemini) attempts.push(['Gemini',         () => transcribeWithGemini(audioBlob)]);
-  if (!attempts.length) throw new Error('No voice transcription key. Add a Groq, OpenAI, or Gemini key.');
+  const engine = config.transcriberEngine || 'auto';
+
+  // Priority: 1. Gemini Cloud Direct -> 2. 9Router (Gemini 2.5 Flash) -> 3. Groq Whisper -> 4. OpenAI
+  if (engine === 'gemini' || engine === 'auto') {
+    if (config.keyGemini) {
+      attempts.push(['Google Gemini Direct', () => transcribeWithGemini(audioBlob)]);
+    }
+  }
+  if (engine === '9router' || engine === 'auto') {
+    if (config.key9RouterAudio || config.url9RouterAudio) {
+      attempts.push(['9Router Gemini 2.5 Flash', () => transcribeWith9Router(audioBlob)]);
+    }
+  }
+  if (engine === 'groq' || engine === 'auto') {
+    if (config.keyGroq) {
+      attempts.push(['Groq Whisper', () => transcribeWithGroq(audioBlob)]);
+    }
+  }
+  if (engine === 'openai' || engine === 'auto') {
+    if (config.keyOpenAI) {
+      attempts.push(['OpenAI Whisper', () => transcribeWithOpenAI(audioBlob)]);
+    }
+  }
+
+  // Fallback to any configured key if the selected engine had none
+  if (!attempts.length) {
+    if (config.keyGemini) attempts.push(['Google Gemini Direct', () => transcribeWithGemini(audioBlob)]);
+    if (config.key9RouterAudio || config.url9RouterAudio) attempts.push(['9Router Gemini 2.5 Flash', () => transcribeWith9Router(audioBlob)]);
+    if (config.keyGroq) attempts.push(['Groq Whisper', () => transcribeWithGroq(audioBlob)]);
+    if (config.keyOpenAI) attempts.push(['OpenAI Whisper', () => transcribeWithOpenAI(audioBlob)]);
+  }
+
+  if (!attempts.length) throw new Error('Tidak ada voice transcriber aktif. Masukkan key di Tab Audio atau Chat.');
 
   const errs = [];
   for (const [name, fn] of attempts) {
     try {
       const t = await fn();
       if (t && t.trim()) return t.trim();
-      errs.push(`${name}: empty`);
+      errs.push(`${name}: hening/kosong`);
     } catch (e) {
-      errs.push(`${name}: ${(e.message || '').slice(0, 70)}`);
+      errs.push(`${name}: ${(e.message || '').slice(0, 80)}`);
     }
   }
-  throw new Error('Transcription failed → ' + errs.join(' · '));
+  throw new Error('Transkripsi gagal → ' + errs.join(' · '));
 }
 
 // Wrap a transcript so the AI answers a spoken question OR solves a spoken/explained task.
@@ -1792,6 +2254,8 @@ document.addEventListener('keydown', (e) => {
     stopManualRecording();
   }
 });
+
+console.info("Renderer script fully initialized successfully. Window mode: " + (document.body.classList.contains('compact') ? 'compact' : 'full') + ", Settings: " + (!document.getElementById('settingsPanel')?.classList.contains('collapsed') ? 'open' : 'closed'));
 </script>
 </body>
 </html>

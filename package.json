@@ -1,7 +1,7 @@
 {
   "name": "ai-interview-helper",
-  "version": "2.0.1",
-  "description": "Free, open-source AI interview assistant: real-time answers from voice transcription and screenshots. Works with Groq, Claude, Gemini, OpenAI, DeepSeek, Z.ai and local Ollama.",
+  "version": "2.1.0",
+  "description": "Free, open-source AI interview assistant: real-time answers from voice transcription and screenshots. Works with Groq, Claude, Gemini, OpenAI, DeepSeek, Z.ai, 9Router and local Ollama.",
   "keywords": [
     "ai interview assistant",
     "interview helper",
@@ -17,17 +17,18 @@
     "claude",
     "gemini",
     "openai",
+    "9router",
     "ollama"
   ],
-  "homepage": "https://github.com/pyk-boo/ai-interview-helper#readme",
+  "homepage": "https://github.com/bapelindo/ai-interview-helper#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pyk-boo/ai-interview-helper.git"
+    "url": "git+https://github.com/bapelindo/ai-interview-helper.git"
   },
   "bugs": {
-    "url": "https://github.com/pyk-boo/ai-interview-helper/issues"
+    "url": "https://github.com/bapelindo/ai-interview-helper/issues"
   },
-  "author": "pyk-boo",
+  "author": "bapel",
   "license": "MIT",
   "main": "main.js",
   "scripts": {
@@ -51,7 +52,8 @@
       "main.js",
       "preload.js",
       "index.html",
-      "package.json"
+      "package.json",
+      "build/**"
     ],
     "publish": null,
     "win": {
