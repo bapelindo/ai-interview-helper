@@ -12,13 +12,13 @@
 ![Price](https://img.shields.io/badge/price-%240%20forever-00e5a0)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS-lightgrey)
 ![Electron](https://img.shields.io/badge/Electron-28-47848F?logo=electron&logoColor=white)
-![AI providers](https://img.shields.io/badge/AI%20providers-7-00d4ff)
-[![GitHub stars](https://img.shields.io/github/stars/pyk-boo/ai-interview-helper?style=flat&color=ffd166)](https://github.com/pyk-boo/ai-interview-helper/stargazers)
+![AI providers](https://img.shields.io/badge/AI%20providers-8-00d4ff)
+[![GitHub stars](https://img.shields.io/github/stars/bapelindo/ai-interview-helper?style=flat&color=ffd166)](https://github.com/bapelindo/ai-interview-helper/stargazers)
 
-<a href="https://github.com/pyk-boo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Setup.exe"><img src="https://img.shields.io/badge/⬇_Download_for_Windows-free-00d4ff?style=for-the-badge" alt="Download for Windows"/></a>
-<a href="https://pyk-boo.github.io/ai-interview-helper/"><img src="https://img.shields.io/badge/🌐_Website-visit-7c6af7?style=for-the-badge" alt="Website"/></a>
+<a href="https://github.com/bapelindo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Setup.exe"><img src="https://img.shields.io/badge/⬇_Download_for_Windows-free-00d4ff?style=for-the-badge" alt="Download for Windows"/></a>
+<a href="https://bapelindo.github.io/ai-interview-helper/"><img src="https://img.shields.io/badge/🌐_Website-visit-7c6af7?style=for-the-badge" alt="Website"/></a>
 
-[**Quick start**](#-quick-start) · [**Features**](#-features) · [**Why free?**](#-free-vs-paid-interview-copilots) · [**FAQ**](#-faq) · [**☕ Support**](#-support-the-project)
+[**Quick start**](#quick-start) · [**Features**](#features) · [**Why free?**](#free-vs-paid-interview-copilots) · [**FAQ**](#faq) · [**☕ Support**](#support-the-project)
 
 </div>
 
@@ -58,8 +58,8 @@
 
 | | |
 |---|---|
-| 📦 **[Installer](https://github.com/pyk-boo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Setup.exe)** | Standard setup with a Start menu shortcut |
-| 🎒 **[Portable](https://github.com/pyk-boo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Portable.exe)** | Single .exe, no installation needed |
+| 📦 **[Installer](https://github.com/bapelindo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Setup.exe)** | Standard setup with a Start menu shortcut |
+| 🎒 **[Portable](https://github.com/bapelindo/ai-interview-helper/releases/latest/download/AI-Interview-Helper-Portable.exe)** | Single .exe, no installation needed |
 
 > Windows may show *"Windows protected your PC"* because the app isn't code-signed yet (certificates cost money, and this project is free). Click **More info → Run anyway**. The full source is right here, so you can check it or build it yourself.
 
@@ -68,7 +68,7 @@
 > Requires [Node.js](https://nodejs.org/) 18+.
 
 ```bash
-git clone https://github.com/pyk-boo/ai-interview-helper.git
+git clone https://github.com/bapelindo/ai-interview-helper.git
 cd ai-interview-helper
 npm install
 npm start
@@ -107,7 +107,7 @@ On macOS use <kbd>⌘ Cmd</kbd> instead of <kbd>Ctrl</kbd>.
 
 ## 🔀 9Router & Ollama Gateway
 
-AI Interview Helper features seamless, production-ready integration with **[9Router](https://9router.com)** (by `decolua`) and **Ollama**:
+AI Interview Helper features seamless, production-ready integration with **[9Router](https://github.com/decolua/9router)** (by [decolua](https://github.com/decolua)) and **Ollama**:
 
 ### Why use 9Router?
 - **3-Tier Smart Auto-Fallback:** Transparently routes between your subscription accounts, secondary low-cost APIs, and local models to completely eliminate rate limit downtime (`429`).
@@ -234,6 +234,6 @@ Every donation gets me one bolt closer, and you'll be officially part of the bui
 
 **If AI Interview Helper saved you a subscription, give it a ⭐. It helps other people find it.**
 
-<sub>Made with ☕ by <a href="https://github.com/pyk-boo">pyk-boo</a></sub>
+<sub>Forked & maintained with ☕ by <a href="https://github.com/bapelindo">bapelindo</a> · Original by <a href="https://github.com/pyk-boo">pyk-boo</a></sub>
 
 </div>

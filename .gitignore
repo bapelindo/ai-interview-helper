@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
 
-# Build output (electron-builder)
-dist/
+# Build output (electron-builder) - dist executables included, exclude temporary unpack dirs
+dist/win-unpacked/
+dist/.icon-ico/
+dist/builder-debug.yml
 out/
 release/
 
