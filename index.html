@@ -206,7 +206,7 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
       <!-- 9Router Gateway — PRIMARY recommended -->
       <div class="api-row">
         <span class="api-label"><span class="provider-dot dot-9router"></span>9Router ⭐</span>
-        <div class="key-wrap"><input type="password" id="keyRouter9" placeholder="sk-..." value="sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46" oninput="updateKeyStatus('router9',this.value)"/><span class="key-status active" id="ks-router9"></span></div>
+        <div class="key-wrap"><input type="password" id="keyRouter9" placeholder="sk-..." oninput="updateKeyStatus('router9',this.value)"/><span class="key-status inactive" id="ks-router9"></span></div>
         <select id="modelRouter9">
           <option value="ag/gemini-3.8-flash-high" selected>Gemini 3.8 Flash High ⚡</option>
           <option value="gemini/gemini-2.5-flash">Gemini 2.5 Flash</option>
@@ -375,8 +375,8 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
       <div class="api-row api-row-2col">
         <span class="api-label"><span class="provider-dot dot-9router"></span>API Key</span>
         <div class="key-wrap">
-          <input type="password" id="key9RouterAudio" placeholder="sk-..." value="sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46" oninput="updateKeyStatus('9router-audio',this.value)"/>
-          <span class="key-status active" id="ks-9router-audio"></span>
+          <input type="password" id="key9RouterAudio" placeholder="sk-..." oninput="updateKeyStatus('9router-audio',this.value)"/>
+          <span class="key-status inactive" id="ks-9router-audio"></span>
         </div>
       </div>
       <div class="api-row api-row-2col">
@@ -489,11 +489,11 @@ kbd{background:rgba(255,255,255,0.08);border:1px solid var(--border2);border-rad
 //  CONFIG & STATE
 // ══════════════════════════════════════════════
 let config = {
-  keyRouter9:'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46',
+  keyRouter9:'',
   modelRouter9:'ag/gemini-3.8-flash-high',
   urlRouter9:'http://127.0.0.1:20128',
   url9RouterAudio:'http://127.0.0.1:20128/v1/audio/transcriptions',
-  key9RouterAudio:'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46',
+  key9RouterAudio:'',
   model9RouterAudio:'gemini/gemini-2.5-flash',
   keyGroq:'', keyAnthropic:'', keyGemini:'', keyOpenAI:'', keyDeepseek:'', keyZai:'',
   modelGroq:'openai/gpt-oss-20b',
@@ -515,7 +515,7 @@ let config = {
   ollamaEnabled: true,
   ollamaModel: 'ag/gemini-3.8-flash-high',
   ollamaUrl: 'http://127.0.0.1:20128',
-  ollamaKey: 'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46',
+  ollamaKey: '',
   screenProtection: false,
   transcriberEngine: 'auto'
 };
@@ -731,8 +731,10 @@ updateTranscriberUI();
     if (u) u.value = 'http://127.0.0.1:20128';
     config.ollamaUrl = 'http://127.0.0.1:20128';
     const k = document.getElementById('ollamaKey');
-    if (k) k.value = 'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46';
-    config.ollamaKey = 'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46';
+    if (k && !k.value && config.keyRouter9) {
+      k.value = config.keyRouter9;
+      config.ollamaKey = config.keyRouter9;
+    }
     saveConfig();
     renderPriorityList();
     updateProviderIndicator();
@@ -1157,7 +1159,7 @@ async function callOllama(model, msgs) {
 // ══════════════════════════════════════════════
 async function transcribeWith9Router(audioBlob) {
   const url = (config.url9RouterAudio || 'http://127.0.0.1:20128/v1/audio/transcriptions').trim();
-  const key = (config.key9RouterAudio || 'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46').trim();
+  const key = (config.key9RouterAudio || config.ollamaKey || config.keyRouter9 || '').trim();
   const model = (config.model9RouterAudio || 'gemini/gemini-2.5-flash').trim();
 
   const fd = new FormData();
@@ -1197,11 +1199,14 @@ async function test9RouterAudio() {
   if (resEl) { resEl.style.color = 'var(--yellow)'; resEl.textContent = '⏳ Menguji koneksi 9Router server (127.0.0.1:20128)...'; }
   try {
     const url = (config.url9RouterAudio || 'http://127.0.0.1:20128/v1/audio/transcriptions').trim();
-    const key = (config.key9RouterAudio || 'sk-d04f279c7aa9bcb2-tcg1jw-e4b63a46').trim();
+    const key = (config.key9RouterAudio || config.ollamaKey || config.keyRouter9 || '').trim();
     const base = url.split('/v1/')[0] || 'http://127.0.0.1:20128';
 
+    const headers = {};
+    if (key) headers['Authorization'] = `Bearer ${key}`;
+
     const pingRes = await fetch(base + '/v1/models', {
-      headers: { 'Authorization': `Bearer ${key}` },
+      headers: headers,
       signal: AbortSignal.timeout(5000)
     });
 

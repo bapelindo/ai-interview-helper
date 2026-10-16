@@ -12,6 +12,13 @@ release/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+app_debug.log
+*.log
+
+# Audio recordings / test files
+*.wav
+*.mp3
+*.webm
 
 # Env / secrets
 .env
